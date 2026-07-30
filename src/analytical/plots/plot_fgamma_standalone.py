@@ -156,8 +156,6 @@ for i, al in enumerate([0.2, 1.0, 3.0, 12.0]):
     P = fsp_stationary(a, beta, a, beta, k_y, gamma, ymax=int(80 + 40 * b * al))
     yv = np.arange(P.size)
     ax[1].plot(yv, P, color=C[i], lw=1.6, label=r"$f/\gamma=%.1f$" % (f / gamma))
-    ax[1].plot(yv, nbinom.pmf(yv, f / gamma, 1 / (1 + b)),
-               color="k", lw=0.8, ls="--", alpha=0.7, zorder=5)
 ax[1].set_xlim(0, 90)
 ax[1].set_yscale("log")
 ax[1].set_ylim(1e-4, 1)

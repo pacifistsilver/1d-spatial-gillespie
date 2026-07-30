@@ -4,7 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import gates as G
-import twosite as ts
+import src.analytical.plots.heterodimer_kinetics_util as ts
 
 mpl.rcParams.update({"font.size": 9, "axes.titlesize": 10, "axes.labelsize": 9,
                      "axes.spines.top": False, "axes.spines.right": False,

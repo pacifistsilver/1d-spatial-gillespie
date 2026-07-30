@@ -167,7 +167,7 @@ def fast_simulator_wrapper(ssa_algorithm, alpha_s, beta_s, alpha_n, beta_n, k_y,
     return results.flatten()
 
 
-def pymc_fast_simulator_monomer(rng, alpha_s, alpha_n, k_y, gamma_y = 0.005, beta_s = 0.06, beta_n = 0.2, t_max=None, num_cells=None, size=None):
+def pymc_fast_simulator_monomer(rng, alpha_s, alpha_n, beta_s, beta_n, k_y = 0.01, gamma_y = 0.005, t_max=None, num_cells=None, size=None):
     """
     Wrapper to bridge PyMC parameters with the Numba function.
     """
@@ -217,5 +217,4 @@ def summary_stat(x):
     mean = np.mean(x)
     var = np.var(x)
     fano = var / mean if mean > 0 else 0.0
-    cv = np.sqrt(var) / mean if mean > 0 else 0.0
-    return np.array([mean, var, fano, cv])
+    return np.log1p(np.array([mean, fano]))

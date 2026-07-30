@@ -1,5 +1,5 @@
 import numpy as np
-import twosite as ts
+import src.analytical.plots.heterodimer_kinetics_util as ts
 
 np.set_printoptions(precision=6, suppress=True)
 
