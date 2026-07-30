@@ -7,7 +7,6 @@ from pymc_extras.model_builder import ModelBuilder
 from typing import Dict
 
 initial_params, _, _ = monomer_params
-synthetic_data = np.load(file="./data/synthetic_data/synthetic_heterodimer_data.npy")
 nanog = np.load(file="./data/nanog.npy")
 sox2=np.load(file="./data/sox2.npy")
 rex1=np.load(file="./data/rex1.npy")
@@ -34,12 +33,12 @@ class MonomerModel(ModelBuilder):
         It will be passed to the class instance on initialization, in case the user doesn't provide any model_config of their own.
         """
         model_config: Dict = {
-            "alpha_s_sigma": 1,
-            "alpha_n_sigma": 1,
-            "beta_s_sigma": 0.05,
-            "beta_n_sigma": 0.1,
-            "gamma_y_sigma": 0.1,
-            "k_y_sigma": 0.1
+            "alpha_s_sigma": 1.0,
+            "alpha_n_sigma": 1.0,
+            "beta_s_sigma": 0.1,
+            "beta_n_sigma": 0.3,
+            "gamma_y_sigma": 0.01,
+            "k_y_sigma": 0.5,
         }
         return model_config
 
@@ -51,7 +50,7 @@ class MonomerModel(ModelBuilder):
         It will be used during fitting in case the user doesn't provide any sampler_config of their own.
         """
         sampler_config: Dict = {
-            "draws": 1000,
+            "draws": 500,
             "tune": 1000,
             "chains": 5,
             "target_accept": 0.95,
@@ -61,18 +60,18 @@ class MonomerModel(ModelBuilder):
     def build_model(self, X=None, y=None, **kwargs):       
         with pm.Model() as self.model:
             cfg = self.model_config
-            alpha_s = pm.Uniform("alpha_s", lower = 0, upper=cfg["alpha_s_sigma"])    
-            alpha_n = pm.Uniform("alpha_n", lower = 0, upper=cfg["alpha_n_sigma"])    
-            k_y = pm.Uniform("k_y", lower = 0, upper=cfg["k_y_sigma"])
-            gamma_y = pm.Uniform("gamma_y", lower = 0, upper=cfg["gamma_y_sigma"])
+            alpha_s = pm.HalfNormal("alpha_s", sigma=cfg["alpha_s_sigma"]) 
+            alpha_n = pm.HalfNormal("alpha_n", sigma=cfg["alpha_n_sigma"]) 
+            beta_s = pm.HalfNormal("beta_s", sigma=cfg["beta_s_sigma"])   
+            beta_n = pm.HalfNormal("beta_n", sigma=cfg["beta_n_sigma"])   
 
             sim = pm.Simulator(
                 "sim", 
                 pymc_fast_simulator_monomer, 
-                params=(alpha_s, alpha_n, k_y, gamma_y), 
+                params=(alpha_s, alpha_n, beta_s, beta_n), 
                 sum_stat=summary_stat,
-                epsilon = 5,
-                observed=synthetic_data
+                epsilon = 2.0,
+                observed=y
             )
                 
     def fit(self, data: pl.DataFrame, sampler_config: dict = None, **kwargs):
@@ -187,18 +186,18 @@ class DimerModel(ModelBuilder):
     def build_model(self, X=None, y=None, **kwargs):       
         with pm.Model() as self.model:
             cfg = self.model_config
-            alpha_s = pm.HalfNormal("alpha_s", sigma=cfg["alpha_s_sigma"]) 
-            alpha_n = pm.HalfNormal("alpha_n", sigma=cfg["alpha_n_sigma"]) 
-            beta_s = pm.HalfNormal("beta_s", sigma=cfg["beta_s_sigma"])   
-            beta_n = pm.HalfNormal("beta_n", sigma=cfg["beta_n_sigma"])   
+            alpha_s = pm.LogNormal("alpha_s", sigma=cfg["alpha_s_sigma"]) 
+            alpha_n = pm.LogNormal("alpha_n", sigma=cfg["alpha_n_sigma"]) 
+            beta_s = pm.LogNormal("beta_s", sigma=cfg["beta_s_sigma"])   
+            beta_n = pm.LogNormal("beta_n", sigma=cfg["beta_n_sigma"])   
 
             sim = pm.Simulator(
                 "sim", 
                 pymc_fast_simulator_het, 
                 params=(alpha_s, alpha_n, beta_s, beta_n), 
                 sum_stat=summary_stat,
-                epsilon = 1,
-                observed=synthetic_data
+                epsilon = 2.0,
+                observed=y
             )            
                 
     def fit(self, data: pl.DataFrame, sampler_config: dict = None, **kwargs):
@@ -268,10 +267,12 @@ class DimerModel(ModelBuilder):
 
 if __name__ == '__main__':  
     # Instantiate the model
-    model = DimerModel()    
-    idata = model.fit(nanog)
-    cfg = model.model_config
-    fname = f"nanog.nc"
-    model.save(fname)
+    dimer_model = DimerModel()    
+    monomer_model = MonomerModel()
+    data = esrrb
+    idata_dimer = dimer_model.fit(data)
+    fname_dimer = f"esrrb_dimer.nc"
+    dimer_model.save(fname_dimer)
+
 
     

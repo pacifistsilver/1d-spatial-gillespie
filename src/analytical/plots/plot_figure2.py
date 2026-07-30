@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.stats import nbinom
-import twosite as ts
+import src.analytical.heterodimer_kinetics_util as ts
 
 mpl.rcParams.update({"font.size": 9, "axes.titlesize": 10, "axes.labelsize": 9,
                      "axes.spines.top": False, "axes.spines.right": False,
