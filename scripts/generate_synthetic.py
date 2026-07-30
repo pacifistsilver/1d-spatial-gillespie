@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 """Generate synthetic count data from known parameters, for inference validation.
 
 Simulating from a known ground truth and re-fitting it is how the inference is
@@ -21,21 +22,30 @@ Two generators
 
 Rates are in units of gamma; see stochtf.inference.models.
 =======
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 """Generate synthetic count data from known parameters, for ABC validation.
 
 Simulating from a known ground truth and re-fitting it is how the ABC-SMC setup
 is checked: the posterior should cover ``TRUE_PARAMS``.
+<<<<<<< HEAD
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 
 Usage
 -----
     python scripts/generate_synthetic.py --model heterodimer
+<<<<<<< HEAD
 <<<<<<< HEAD
     python scripts/generate_synthetic.py --model telegraph --n-cells 800
     python scripts/generate_synthetic.py --model heterodimer --method ssa
 =======
     python scripts/generate_synthetic.py --model monomer --n-cells 40
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+    python scripts/generate_synthetic.py --model monomer --n-cells 40
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 """
 
 import argparse
@@ -43,6 +53,7 @@ import os
 
 import numpy as np
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 from stochtf.analytical import pgf
 from stochtf.paths import SYNTHETIC_DATA_DIR
@@ -109,6 +120,8 @@ def generate_ssa(model, n_cells, t_max):
     return counts.flatten()
 
 =======
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 from stochtf.inference.abc_smc import fast_ssa_dimer, fast_ssa_monomer
 from stochtf.paths import SYNTHETIC_DATA_DIR
 
@@ -127,11 +140,15 @@ SIMULATORS = {"monomer": fast_ssa_monomer, "heterodimer": fast_ssa_dimer}
 #: Each SSA call returns 10 observations, one per sampling time.
 OBS_PER_CELL = 10
 
+<<<<<<< HEAD
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+<<<<<<< HEAD
 <<<<<<< HEAD
     ap.add_argument("--model", choices=sorted(GATES), default="heterodimer")
     ap.add_argument("--method", choices=["stationary", "ssa"], default="stationary")
@@ -157,6 +174,8 @@ def main():
     print(f"generated       : mean {flat.mean():8.3f}  Fano "
           f"{flat.var() / flat.mean():7.3f}  n {flat.size}")
 =======
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
     ap.add_argument("--model", choices=sorted(SIMULATORS), default="heterodimer")
     ap.add_argument("--n-cells", type=int, default=40)
     ap.add_argument("--t-max", type=float, default=1000.0)
@@ -180,7 +199,10 @@ def main():
     out = os.path.join(SYNTHETIC_DATA_DIR, f"synthetic_{args.model}_data.npy")
     np.save(out, flat)
     print(f"mean {flat.mean():.3f}  var {flat.var():.3f}  n {flat.size}")
+<<<<<<< HEAD
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
     print(f"Wrote {out}")
 
 

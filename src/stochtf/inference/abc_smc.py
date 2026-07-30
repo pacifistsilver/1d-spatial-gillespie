@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <<<<<<<< HEAD:src/stochtf/ssa/fast.py
 """Numba-compiled Gillespie simulators for the promoter models.
 
@@ -16,12 +17,17 @@ from numba import njit
 from stochtf.ssa.params import monomer_params
 
 ========
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 import numpy as np
 from numba import njit, prange
 
 from stochtf.ssa.params import monomer_params
 
+<<<<<<< HEAD
 >>>>>>>> 96a2b5c (refactor: restructure into an installable package for publication):src/stochtf/inference/abc_smc.py
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 params, initial_state, stoichiometry = monomer_params
 
 

@@ -1,11 +1,17 @@
 """Project directory locations, resolved from the installed package.
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 
 Scripts previously used relative paths like ``./data/nanog.npy``, which only
 worked when run from the repository root. Resolving from ``__file__`` instead
 makes every entry point runnable from anywhere.
+<<<<<<< HEAD
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 """
 
 import os
@@ -26,12 +32,15 @@ def processed(name):
     return os.path.join(PROCESSED_DATA_DIR, name)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 def synthetic(name):
     """Path to a processed per-gene count array, e.g. ``processed('sox2.npy')``."""
     return os.path.join(SYNTHETIC_DATA_DIR, name)
 
 =======
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 
 def raw(name):
     """Path to a raw downloaded file under ``data/raw/``."""

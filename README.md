@@ -70,15 +70,20 @@ python scripts/run_fsp.py burr08 --expander support
 
 ```bash
 <<<<<<< HEAD
+<<<<<<< HEAD
 python scripts/run_inference.py --gene esrrb --model dimer
 =======
 python scripts/run_abc_smc.py --gene esrrb --model dimer
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+python scripts/run_abc_smc.py --gene esrrb --model dimer
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 ```
 
 Traces are written to `results/` and analysed in
 `notebooks/05_abc_diagnostics.ipynb`.
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 ### Inference uses the exact distribution, not a simulator
 
@@ -113,6 +118,8 @@ determine only the ratios, so γ is fixed at 1 and cannot be identified separate
 
 =======
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 ## Data
 
 Raw counts come from GEO accession
@@ -148,10 +155,14 @@ exact FSP, and the single-site limits.
 │   ├── ssa/              Gillespie simulator, parameters, promoter models
 │   ├── cme/              chemical master equation solver (FSP)
 <<<<<<< HEAD
+<<<<<<< HEAD
 │   ├── inference/        exact stationary likelihood + SMC models
 =======
 │   ├── inference/        ABC-SMC models and numba simulators
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+│   ├── inference/        ABC-SMC models and numba simulators
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 │   ├── plotting.py       shared figure style
 │   └── paths.py          project directory resolution
 ├── figures/              one script per paper figure -> figures/output/

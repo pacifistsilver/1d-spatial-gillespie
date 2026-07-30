@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 """Bayesian models for the monomer and heterodimer promoters.
 
 These were ABC-SMC models: a Gillespie simulator compared to the data through
@@ -24,18 +25,24 @@ Transcription rate
     29.7 (sox2) to 251.5 (esrrb), so no parameter setting could fit the data.
     k_y is now inferred.
 =======
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 """ABC-SMC model definitions for the monomer and heterodimer promoters.
 
 Both models previously duplicated ``_data_setter``,
 ``_generate_and_preprocess_model_data``, the two config staticmethods, ``fit``
 and a 37-line ``save`` verbatim; the shared behaviour now lives on
 :class:`_SMCModel` and each subclass supplies only its priors and simulator.
+<<<<<<< HEAD
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 """
 
 import json
 from typing import Dict
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 import numpy as np
 import pymc as pm
@@ -120,6 +127,8 @@ class _ExactModel(ModelBuilder):
     def _data_setter(self, X, y=None):
         pass  # ModelBuilder requires this method; X/y are not standard inputs
 =======
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 import polars as pl
 import pymc as pm
 from pymc_extras.model_builder import ModelBuilder
@@ -161,7 +170,10 @@ class _SMCModel(ModelBuilder):
 
     def _data_setter(self, X, y=None):
         pass  # ModelBuilder requires this method; X/y are not used as standard inputs
+<<<<<<< HEAD
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 
     def _generate_and_preprocess_model_data(self, X, y=None):
         pass  # ModelBuilder requires this method
@@ -169,13 +181,18 @@ class _SMCModel(ModelBuilder):
     @staticmethod
     def get_default_model_config() -> Dict:
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
         """Prior scales used when no model_config is supplied at construction."""
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+        """Prior scales used when no model_config is supplied at construction."""
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
         return dict(DEFAULT_MODEL_CONFIG)
 
     @staticmethod
     def get_default_sampler_config() -> Dict:
+<<<<<<< HEAD
 <<<<<<< HEAD
         return dict(DEFAULT_SAMPLER_CONFIG)
 
@@ -220,6 +237,8 @@ class _SMCModel(ModelBuilder):
                 self.idata["prior"] = prior["prior"]
 
 =======
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
         """Sampler settings used when no sampler_config is supplied."""
         return dict(DEFAULT_SAMPLER_CONFIG)
 
@@ -260,7 +279,10 @@ class _SMCModel(ModelBuilder):
                 self.idata["prior_predictive"] = prior_distribution["prior_predictive"]
             self.idata["log_likelihood"] = log_likelihood["log_likelihood"]
             self.idata["log_prior"] = log_prior["log_prior"]
+<<<<<<< HEAD
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
         return self.idata
 
     def save(self, fname: str):
@@ -300,6 +322,7 @@ class _SMCModel(ModelBuilder):
         super().save(fname)
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 class MonomerModel(_ExactModel):
     """Independent SOX2 and NANOG sites, additive transcription rate.
@@ -377,6 +400,8 @@ class TelegraphModel(_ExactModel):
 MODELS = {"monomer": MonomerModel, "dimer": DimerModel,
           "telegraph": TelegraphModel}
 =======
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 class MonomerModel(_SMCModel):
     """Independent SOX2 and NANOG binding, half-normal priors."""
 
@@ -396,4 +421,7 @@ class DimerModel(_SMCModel):
 
 
 MODELS = {"monomer": MonomerModel, "dimer": DimerModel}
+<<<<<<< HEAD
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
+=======
+>>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
