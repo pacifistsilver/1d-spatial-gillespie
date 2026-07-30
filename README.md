@@ -69,12 +69,17 @@ python scripts/run_fsp.py burr08 --expander support
 ```
 
 ```bash
+<<<<<<< HEAD
 python scripts/run_inference.py --gene esrrb --model dimer
+=======
+python scripts/run_abc_smc.py --gene esrrb --model dimer
+>>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
 ```
 
 Traces are written to `results/` and analysed in
 `notebooks/05_abc_diagnostics.ipynb`.
 
+<<<<<<< HEAD
 ### Inference uses the exact distribution, not a simulator
 
 `stochtf.analytical.pgf` computes the stationary count distribution exactly, so
@@ -106,6 +111,8 @@ independent check.
 Rates are inferred in units of γ, the mRNA degradation rate: stationary counts
 determine only the ratios, so γ is fixed at 1 and cannot be identified separately.
 
+=======
+>>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
 ## Data
 
 Raw counts come from GEO accession
@@ -140,7 +147,11 @@ exact FSP, and the single-site limits.
 │   ├── analytical/       closed-form + FSP results for two-site promoters
 │   ├── ssa/              Gillespie simulator, parameters, promoter models
 │   ├── cme/              chemical master equation solver (FSP)
+<<<<<<< HEAD
 │   ├── inference/        exact stationary likelihood + SMC models
+=======
+│   ├── inference/        ABC-SMC models and numba simulators
+>>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
 │   ├── plotting.py       shared figure style
 │   └── paths.py          project directory resolution
 ├── figures/              one script per paper figure -> figures/output/

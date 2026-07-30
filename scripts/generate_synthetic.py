@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """Generate synthetic count data from known parameters, for inference validation.
 
 Simulating from a known ground truth and re-fitting it is how the inference is
@@ -19,12 +20,22 @@ Two generators
     why parameters could not be recovered from it. Kept for comparison.
 
 Rates are in units of gamma; see stochtf.inference.models.
+=======
+"""Generate synthetic count data from known parameters, for ABC validation.
+
+Simulating from a known ground truth and re-fitting it is how the ABC-SMC setup
+is checked: the posterior should cover ``TRUE_PARAMS``.
+>>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
 
 Usage
 -----
     python scripts/generate_synthetic.py --model heterodimer
+<<<<<<< HEAD
     python scripts/generate_synthetic.py --model telegraph --n-cells 800
     python scripts/generate_synthetic.py --model heterodimer --method ssa
+=======
+    python scripts/generate_synthetic.py --model monomer --n-cells 40
+>>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
 """
 
 import argparse
@@ -32,6 +43,7 @@ import os
 
 import numpy as np
 
+<<<<<<< HEAD
 from stochtf.analytical import pgf
 from stochtf.paths import SYNTHETIC_DATA_DIR
 from stochtf.ssa.fast import fast_ssa_dimer, fast_ssa_monomer
@@ -96,10 +108,31 @@ def generate_ssa(model, n_cells, t_max):
                               TRUE_PARAMS["gamma_y"], t_max)
     return counts.flatten()
 
+=======
+from stochtf.inference.abc_smc import fast_ssa_dimer, fast_ssa_monomer
+from stochtf.paths import SYNTHETIC_DATA_DIR
+
+#: Ground-truth rates the synthetic data is generated from.
+TRUE_PARAMS = {
+    "alpha_s": 0.5,
+    "beta_s": 0.06,
+    "alpha_n": 0.3,
+    "beta_n": 0.2,
+    "gamma_y": 0.005,
+    "k_y": 0.1,
+}
+
+SIMULATORS = {"monomer": fast_ssa_monomer, "heterodimer": fast_ssa_dimer}
+
+#: Each SSA call returns 10 observations, one per sampling time.
+OBS_PER_CELL = 10
+
+>>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+<<<<<<< HEAD
     ap.add_argument("--model", choices=sorted(GATES), default="heterodimer")
     ap.add_argument("--method", choices=["stationary", "ssa"], default="stationary")
     ap.add_argument("--n-cells", type=int, default=800)
@@ -123,6 +156,31 @@ def main():
     print(f"true stationary : mean {mean:8.3f}  Fano {fano:7.3f}")
     print(f"generated       : mean {flat.mean():8.3f}  Fano "
           f"{flat.var() / flat.mean():7.3f}  n {flat.size}")
+=======
+    ap.add_argument("--model", choices=sorted(SIMULATORS), default="heterodimer")
+    ap.add_argument("--n-cells", type=int, default=40)
+    ap.add_argument("--t-max", type=float, default=1000.0)
+    args = ap.parse_args()
+
+    simulator = SIMULATORS[args.model]
+    counts = np.empty((args.n_cells, OBS_PER_CELL))
+    for i in range(args.n_cells):
+        counts[i] = simulator(
+            TRUE_PARAMS["alpha_s"],
+            TRUE_PARAMS["beta_s"],
+            TRUE_PARAMS["alpha_n"],
+            TRUE_PARAMS["beta_n"],
+            TRUE_PARAMS["k_y"],
+            TRUE_PARAMS["gamma_y"],
+            args.t_max,
+        )
+
+    flat = counts.flatten()
+    os.makedirs(SYNTHETIC_DATA_DIR, exist_ok=True)
+    out = os.path.join(SYNTHETIC_DATA_DIR, f"synthetic_{args.model}_data.npy")
+    np.save(out, flat)
+    print(f"mean {flat.mean():.3f}  var {flat.var():.3f}  n {flat.size}")
+>>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
     print(f"Wrote {out}")
 
 
