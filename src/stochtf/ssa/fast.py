@@ -1,4 +1,11 @@
+<<<<<<< HEAD
 <<<<<<<< HEAD:src/stochtf/ssa/fast.py
+=======
+<<<<<<<< HEAD:src/stochtf/inference/abc_smc.py
+<<<<<<<< HEAD:src/stochtf/ssa/fast.py
+========
+>>>>>>>> d474080 (test):src/stochtf/ssa/fast.py
+>>>>>>> d474080 (test)
 """Numba-compiled Gillespie simulators for the promoter models.
 
 These were the ABC-SMC simulators. Inference now uses the exact stationary
@@ -11,14 +18,25 @@ Each returns 10 counts sampled along a single trajectory at
 independent cells -- which was part of why the ABC likelihood was mis-specified.
 """
 
+<<<<<<< HEAD
+=======
+<<<<<<<< HEAD:src/stochtf/inference/abc_smc.py
+>>>>>>> d474080 (test)
 import numpy as np
 from numba import njit
 
 from stochtf.ssa.params import monomer_params
 
 ========
+<<<<<<< HEAD
 import numpy as np
 from numba import njit, prange
+=======
+========
+>>>>>>>> d474080 (test):src/stochtf/ssa/fast.py
+import numpy as np
+from numba import njit
+>>>>>>> d474080 (test)
 
 from stochtf.ssa.params import monomer_params
 
