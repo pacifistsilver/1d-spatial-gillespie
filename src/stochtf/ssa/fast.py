@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<<<< HEAD:src/stochtf/ssa/fast.py
 =======
 <<<<<<<< HEAD:src/stochtf/inference/abc_smc.py
@@ -6,6 +7,8 @@
 ========
 >>>>>>>> d474080 (test):src/stochtf/ssa/fast.py
 >>>>>>> d474080 (test)
+=======
+>>>>>>> b18f625 (test)
 """Numba-compiled Gillespie simulators for the promoter models.
 
 These were the ABC-SMC simulators. Inference now uses the exact stationary
@@ -19,9 +22,12 @@ independent cells -- which was part of why the ABC likelihood was mis-specified.
 """
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<<< HEAD:src/stochtf/inference/abc_smc.py
 >>>>>>> d474080 (test)
+=======
+>>>>>>> b18f625 (test)
 import numpy as np
 from numba import njit
 

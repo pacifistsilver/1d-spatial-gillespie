@@ -1,6 +1,7 @@
 """Project directory locations, resolved from the installed package.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 Scripts previously used relative paths like ``./data/nanog.npy``, which only
@@ -9,6 +10,8 @@ makes every entry point runnable from anywhere.
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
 =======
 >>>>>>> d474080 (test)
+=======
+>>>>>>> b18f625 (test)
 """
 
 import os
@@ -30,17 +33,23 @@ def processed(name):
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> d474080 (test)
+=======
+>>>>>>> b18f625 (test)
 def synthetic(name):
     """Path to a processed per-gene count array, e.g. ``processed('sox2.npy')``."""
     return os.path.join(SYNTHETIC_DATA_DIR, name)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
 =======
 >>>>>>> d474080 (test)
+=======
+>>>>>>> b18f625 (test)
 
 def raw(name):
     """Path to a raw downloaded file under ``data/raw/``."""

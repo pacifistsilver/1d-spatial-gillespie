@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 """Generate synthetic count data from known parameters, for inference validation.
 
 Simulating from a known ground truth and re-fitting it is how the inference is
@@ -30,6 +31,10 @@ is checked: the posterior should cover ``TRUE_PARAMS``.
 =======
 """Generate synthetic count data from known parameters, for inference validation.
 
+=======
+"""Generate synthetic count data from known parameters, for inference validation.
+
+>>>>>>> b18f625 (test)
 Simulating from a known ground truth and re-fitting it is how the inference is
 checked: the posterior should cover ``TRUE_PARAMS``.
 
@@ -49,11 +54,15 @@ Two generators
     why parameters could not be recovered from it. Kept for comparison.
 
 Rates are in units of gamma; see stochtf.inference.models.
+<<<<<<< HEAD
 >>>>>>> d474080 (test)
+=======
+>>>>>>> b18f625 (test)
 
 Usage
 -----
     python scripts/generate_synthetic.py --model heterodimer
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     python scripts/generate_synthetic.py --model telegraph --n-cells 800
@@ -65,6 +74,10 @@ Usage
     python scripts/generate_synthetic.py --model telegraph --n-cells 800
     python scripts/generate_synthetic.py --model heterodimer --method ssa
 >>>>>>> d474080 (test)
+=======
+    python scripts/generate_synthetic.py --model telegraph --n-cells 800
+    python scripts/generate_synthetic.py --model heterodimer --method ssa
+>>>>>>> b18f625 (test)
 """
 
 import argparse
@@ -74,6 +87,9 @@ import numpy as np
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b18f625 (test)
 from stochtf.analytical import pgf
 from stochtf.paths import SYNTHETIC_DATA_DIR
 from stochtf.ssa.fast import fast_ssa_dimer, fast_ssa_monomer
@@ -138,6 +154,7 @@ def generate_ssa(model, n_cells, t_max):
                               TRUE_PARAMS["gamma_y"], t_max)
     return counts.flatten()
 
+<<<<<<< HEAD
 =======
 from stochtf.inference.abc_smc import fast_ssa_dimer, fast_ssa_monomer
 =======
@@ -210,14 +227,19 @@ def generate_ssa(model, n_cells, t_max):
     return counts.flatten()
 
 >>>>>>> d474080 (test)
+=======
+>>>>>>> b18f625 (test)
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> d474080 (test)
+=======
+>>>>>>> b18f625 (test)
     ap.add_argument("--model", choices=sorted(GATES), default="heterodimer")
     ap.add_argument("--method", choices=["stationary", "ssa"], default="stationary")
     ap.add_argument("--n-cells", type=int, default=800)
@@ -225,6 +247,9 @@ def main():
                     help="ssa method only")
     ap.add_argument("--seed", type=int, default=0)
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b18f625 (test)
     args = ap.parse_args()
 
     if args.method == "stationary":
@@ -242,6 +267,7 @@ def main():
     print(f"true stationary : mean {mean:8.3f}  Fano {fano:7.3f}")
     print(f"generated       : mean {flat.mean():8.3f}  Fano "
           f"{flat.var() / flat.mean():7.3f}  n {flat.size}")
+<<<<<<< HEAD
 =======
     ap.add_argument("--model", choices=sorted(SIMULATORS), default="heterodimer")
     ap.add_argument("--n-cells", type=int, default=40)
@@ -270,6 +296,8 @@ def main():
     print(f"generated       : mean {flat.mean():8.3f}  Fano "
           f"{flat.var() / flat.mean():7.3f}  n {flat.size}")
 >>>>>>> d474080 (test)
+=======
+>>>>>>> b18f625 (test)
     print(f"Wrote {out}")
 
 

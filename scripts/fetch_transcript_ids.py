@@ -5,6 +5,7 @@ rows of the combined allele table into one count vector per gene, saved to
 ``data/processed/<gene>.npy``. Those arrays are the observed data for
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ``scripts/run_inference.py``.
 =======
 ``scripts/run_abc_smc.py``.
@@ -12,6 +13,9 @@ rows of the combined allele table into one count vector per gene, saved to
 =======
 ``scripts/run_inference.py``.
 >>>>>>> d474080 (test)
+=======
+``scripts/run_inference.py``.
+>>>>>>> b18f625 (test)
 
 Pipeline position
 -----------------
