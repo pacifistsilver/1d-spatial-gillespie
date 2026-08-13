@@ -9,19 +9,7 @@ Subpackages
 analytical  closed-form and FSP results for two-site promoters and dimer drivers
 ssa         Gillespie simulation of the monomer / homodimer / heterodimer models
 cme         Chemical Master Equation solver (finite state projection)
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 inference   exact-likelihood parameter inference against allele-resolved counts
-=======
-inference   ABC-SMC parameter inference against allele-resolved count data
->>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
-=======
-inference   exact-likelihood parameter inference against allele-resolved counts
->>>>>>> d474080 (test)
-=======
-inference   exact-likelihood parameter inference against allele-resolved counts
->>>>>>> b18f625 (test)
 """
 
 __version__ = "1.0.0"

@@ -3,19 +3,7 @@
 Looks up each gene's canonical transcript from Ensembl, then sums the matching
 rows of the combined allele table into one count vector per gene, saved to
 ``data/processed/<gene>.npy``. Those arrays are the observed data for
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 ``scripts/run_inference.py``.
-=======
-``scripts/run_abc_smc.py``.
->>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
-=======
-``scripts/run_inference.py``.
->>>>>>> d474080 (test)
-=======
-``scripts/run_inference.py``.
->>>>>>> b18f625 (test)
 
 Pipeline position
 -----------------
