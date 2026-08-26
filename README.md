@@ -11,7 +11,7 @@ Code accompanying:
 > pluripotent cells," Dec. 2025.
 > doi: [10.64898/2025.12.03.691924](https://doi.org/10.64898/2025.12.03.691924)
 
-## What this is
+## Description
 
 In mouse embryonic stem cells, SOX2 and NANOG regulate the same pluripotency
 targets. *How* they share a promoter is not settled, and two architectures are
