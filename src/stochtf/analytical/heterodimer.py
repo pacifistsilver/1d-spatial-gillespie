@@ -1,16 +1,4 @@
 """Heterodimer promoter with mRNA production and degradation.
-
-Promoter states (sigma_s, sigma_n) in {0,1}^2, mapping to the master-equation
-compartments n00, n10, n01, n11. Site s flips 0->1 at alpha_s and 1->0 at
-beta_s, site n likewise with (alpha_n, beta_n). The two sites are independent.
-mRNA y is produced at rate k_y whenever *at least one* site is bound
-(states 10, 01, 11) and degrades at rate gamma per molecule.
-
-Because the silent set is the single state 00, visits to it are regeneration
-points: ON/OFF durations are i.i.d. and the burst decomposition is EXACT.
-
-Everything below is for one gene copy; for N copies multiply the burst
-frequency by N (burst size and Fano factor are N-independent).
 """
 
 import numpy as np

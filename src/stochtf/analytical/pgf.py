@@ -1,40 +1,4 @@
-"""Probability generating functions for the two-site promoter models.
-
-The stationary mRNA count y is a Cox process: conditional on the promoter path,
-y is Poisson with a random rate, so its distribution is fully characterised by
-the generating function G(z) = E[z^y]. Working with G instead of simulating
-gives the *whole* distribution rather than a few summary statistics, and it is
-deterministic -- there is no Monte Carlo noise to tune an ABC tolerance against.
-
-Writing G_i(z) = E[z^y 1{sigma = i}] for the four promoter compartments, the
-stationary master equation becomes a linear ODE in u = z - 1,
-
-    gamma u dG/du = Q^T G + u K G,        G(0) = pi,
-
-with Q the promoter generator, K = diag(k_y * act) the per-state transcription
-rates, and pi the stationary promoter distribution. Everything below follows
-from that one equation.
-
-Three routes are provided, and they agree to machine precision:
-
-``telegraph_pgf`` / ``pgf``
-    Closed form for the ADD gate. Each site contributes additively, so the mRNA
-    pool splits into two independent telegraph-modulated birth-death processes
-    and G factorises into two Kummer functions. Exact and fast.
-
-``stationary_pmf``
-    The full distribution. For ADD this inverts the closed-form PGF by FFT; for
-    OR/AND, where no closed form exists, it solves the block-tridiagonal
-    stationary CME, which is the same distribution obtained a different way.
-
-``pgf_ode``
-    The general PGF for an arbitrary driver, by integrating the ODE above. This
-    is the reference implementation used to validate the other two; it is far
-    too slow for an inference inner loop (seconds per call).
-
-Factorial moments come from a clean exact recursion on the Taylor coefficients
-of G about z = 1, so mean, variance and Fano need no truncation at all.
-"""
+"""Probability generating functions for the promoter models."""
 
 import numpy as np
 from scipy.special import hyp1f1
@@ -76,11 +40,6 @@ def stationary_promoter(Q):
     rhs[0] = 1.0
     return np.linalg.solve(M, rhs)
 
-
-# ----------------------------------------------------------------------
-# closed-form PGF: single site, and the additive (monomer) gate
-# ----------------------------------------------------------------------
-
 def telegraph_pgf(z, alpha, beta, k_y, gamma):
     """PGF of one telegraph-modulated birth-death process.
 
@@ -113,11 +72,6 @@ def pgf(z, a_s, b_s, a_n, b_n, k_y, gamma, gate="ADD"):
         )
     return (telegraph_pgf(z, a_s, b_s, k_y, gamma)
             * telegraph_pgf(z, a_n, b_n, k_y, gamma))
-
-
-# ----------------------------------------------------------------------
-# factorial moments: exact, truncation-free
-# ----------------------------------------------------------------------
 
 def factorial_moments(a_s, b_s, a_n, b_n, k_y, gamma, gate="OR", order=2):
     """Factorial moments E[y(y-1)...(y-j+1)] for j = 1..order.
@@ -156,10 +110,6 @@ def moments(a_s, b_s, a_n, b_n, k_y, gamma, gate="OR"):
     var = m2 + mean - mean**2
     return mean, var, var / mean
 
-
-# ----------------------------------------------------------------------
-# the full distribution
-# ----------------------------------------------------------------------
 
 def pmf_from_pgf(pgf_values, n_points):
     """Invert a PGF sampled on the unit circle.
@@ -215,11 +165,6 @@ def _pmf_block_tridiagonal(a_s, b_s, a_n, b_n, k_y, gamma, gate, y_max):
     return np.clip(p, 0.0, None) / total
 
 
-#: Above roughly this transcription-to-degradation ratio, inverting the
-#: closed-form PGF by FFT stops being trustworthy: ``hyp1f1`` is evaluated at
-#: argument (k_y/gamma)(z-1), whose modulus reaches 2 k_y/gamma on the unit
-#: circle, and it loses precision progressively (~1e-7 at 30, ~2e-4 at 250) and
-#: returns NaN by 500. The CME route has no such limit.
 PGF_FFT_MAX_K_OVER_GAMMA = 20.0
 
 
@@ -284,10 +229,6 @@ def model_pmf(model, a_s, b_s, a_n, b_n, k_y, gamma, y_max=None):
         ) from None
     return stationary_pmf(a_s, b_s, a_n, b_n, k_y, gamma, gate, y_max=y_max)
 
-
-# ----------------------------------------------------------------------
-# general PGF by ODE -- reference implementation
-# ----------------------------------------------------------------------
 
 def pgf_ode(u, a_s, b_s, a_n, b_n, k_y, gamma, gate="OR",
             n_steps=4000, s_min=-14.0):

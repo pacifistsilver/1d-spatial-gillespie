@@ -40,17 +40,6 @@ layer is integrated out. Both chains are reversible, so starting each cell from
 the stationary occupancy and running forward in age samples the true stationary
 distribution, one iteration per promoter switch.
 
-Identifiability:
-  Stationary counts determine rates only relative to the mRNA degradation rate,
-  so gamma is fixed at 1 and the time unit is one mRNA lifetime. They also
-  cannot determine four switching rates at once, so the off-rates are pinned by
-  default to the pair single-molecule tracking measures directly
-  (beta_s = 0.04, beta_n = 0.26), leaving alpha_s, alpha_n and k_y free.
-  Clearing ``beta_s_fixed``/``beta_n_fixed`` in ``model_config`` infers them
-  instead, at the cost of posteriors that are mostly prior. Pinning them also
-  breaks the factor-exchange symmetry that would otherwise leave the marginals
-  ambiguous. See :mod:`stochtf.inference.identifiability`.
-
 :mod:`stochtf.inference.likelihood` computes the same quantity for the
 independent-site gates via ``stochtf.analytical.pgf``. That route cannot
 express the exclusive monomer, whose promoter is not a product of two two-state

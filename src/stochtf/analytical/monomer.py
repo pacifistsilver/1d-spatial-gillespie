@@ -1,12 +1,4 @@
-
-"""Burst frequency and burst size for the monomer (M) model.
- 
-Two emission readings are compared:
-  OR  : propensity k_y (n_b + s_b)   -- as written in the CME, Eq. (20)
-  AND : propensity k_y  n_b s_b      -- as written in the schematic, Eq. (3)
- 
-Rates from Table 3 (SMT-derived, corrected):
-  beta_s = 1/15 s^-1,  beta_n = 1/4.2 s^-1,  gamma = 3e-5 s^-1,  k_y = 0.01 s^-1
+"""Monomer model
 """
 import numpy as np
 

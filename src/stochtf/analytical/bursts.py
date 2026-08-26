@@ -1,11 +1,4 @@
 """General burst frequency / size for ANY autonomous driver chain.
-
-Definitions that work even with graded output or a fluctuating pool:
-  OFF set F = driver states with zero emission;  ON set O = the rest.
-  f = stationary flux across F -> O   (every burst starts with exactly one such jump)
-  burst size = molecules emitted between entering O and returning to F
-             = discrete phase-type on O, allowing per-state emission rates
-  b = mean burst size;  identity  <y> = b f / gamma  must hold.
 """
 import numpy as np
 from scipy.sparse import csc_matrix, identity
