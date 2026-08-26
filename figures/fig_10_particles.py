@@ -1,21 +1,5 @@
 """Accepted SMC particles for each promoter, fitted separately.
 
-The population ``pm.sample_smc`` returns at its final stage *is* the set of
-accepted particles, so the posterior draws are what to plot. The maps in
-``fig_9_model_selection`` compress each fit to a single number; this shows the
-cloud behind one of them, where the correlations between rates and the shape of
-each marginal are visible.
-
-The monomer and the heterodimer are fitted in separate runs rather than read off
-a joint fit, so each gets its full particle population rather than whatever
-share of a mixture the topology indicator happened to allocate it. One figure
-per promoter, drawn on shared axes so the two can be laid side by side.
-
-Each figure is a lower triangle: marginals on the diagonal carrying the
-posterior median and its credible interval, and a smooth density of the
-particles below. Gold stars mark the rates the data were generated from, where
-those are known.
-
 Usage
 -----
     python figures/fig_10_particles.py

@@ -1,8 +1,5 @@
 """Generate synthetic count data from known parameters, to validate inference.
 
-Simulating from a known ground truth and re-fitting it is how the inference is
-checked: the posterior should cover ``TRUE_PARAMS``.
-
 Two generators
 --------------
 ``--method stationary`` (default)

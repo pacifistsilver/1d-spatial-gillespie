@@ -4,13 +4,6 @@
 actually want and reports what each looks like, so a panel can go straight into
 the inference.
 
-Symbols move. The table is named with Ensembl release 96 (2019) gene names, and
-gene lists assembled from older annotations carry symbols that have since been
-retired or renamed. Rather than fail on those, each is resolved through Ensembl
-to its gene id and then back to the release-96 name actually used in the table.
-The results of that resolution are recorded in :data:`ALIASES` so the mapping is
-auditable and the script stays offline.
-
 Usage
 -----
     python scripts/extract_genes.py --list data/genelists/ochiai_panel.txt

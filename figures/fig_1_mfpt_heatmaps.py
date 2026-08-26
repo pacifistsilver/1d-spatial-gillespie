@@ -1,8 +1,4 @@
-"""Mean first-passage time out of the bound states, across the rate plane.
-
-One row varies a single rate at a time; the other sweeps the full plane,
-marking the rates implied by single-molecule tracking.
-"""
+"""Mean first-passage time out of the bound states, across the rate plane."""
 
 import os
 
@@ -130,8 +126,6 @@ panels = [
      fx(**{r"k_{on,s}": AS0, r"k_{on,n}": AN0})),
 ]
 
-# one colour scale for every panel, snapped to whole decades so the
-# colourbar ticks and the contour levels line up
 LO = 10.0 ** np.floor(np.log10(min(float(p[0].min()) for p in panels)))
 HI = 10.0 ** np.ceil(np.log10(max(float(p[0].max()) for p in panels)))
 LEVELS =  5 ** np.arange(np.log10(LO), np.log10(HI) + 5)

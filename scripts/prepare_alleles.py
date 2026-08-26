@@ -1,34 +1,5 @@
 """Combine the 129 and CAST allele tables into per-gene, per-allele counts.
 
-GSE132589 ships one transcript-by-cell count table per allele. This collapses
-both to gene level and writes them side by side, keeping the alleles separate.
-
-Why separate. Each cell carries two copies of the locus, and the assay reports
-them individually. Summing them would describe a two-copy gene, whose
-mean-to-variance relationship differs from the single-promoter model being
-fitted; the two alleles are instead treated as independent realisations of one
-promoter, giving 2 x n_cells observations per gene. The concatenated form is
-what ``--gene`` writes, and it is why the committed arrays in data/processed
-have 838 entries for 419 cells.
-
-Reading the tables
-------------------
-The files are R ``write.table`` output: the header names the 419 cells but each
-data row carries 420 fields, the first being the transcript id. Read with
-``has_header=True`` every column is therefore shifted by one -- the first column
-is *named* for a cell but *holds* transcript ids, each count column is
-attributed to the wrong cell, and the last cell is silently dropped by ragged
-line truncation. The header is parsed separately here and the names applied
-explicitly.
-
-Transcript to gene
-------------------
-Mapping comes from the Ensembl GTF rather than a lookup service, so the whole
-annotation arrives in one download, works offline afterwards, and pins the
-release. Release 96 (GRCm38, April 2019) is used because it is contemporary
-with the deposit; a newer release retires some of the transcript ids present in
-these tables.
-
 Usage
 -----
     python scripts/prepare_alleles.py 

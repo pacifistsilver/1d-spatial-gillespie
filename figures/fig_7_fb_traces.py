@@ -1,46 +1,5 @@
 """Fig 7: monomer and heterodimer trajectories at the four points of fig 5.
 
-``fig_5_distributions`` sweeps the (k_on,s, k_on,n) plane and measures how far
-apart the two topologies' stationary count distributions are, then opens four
-points of that plane -- A, B, C, D -- to show the distributions themselves.
-This figure is the same four points seen in time: at each one, both promoters
-are run with the *same* rates and their trajectories are drawn on the same
-axes, so what separates two nearly identical count distributions is visible as
-promoter dynamics rather than inferred from a distance.
-
-The rate convention is fig 5's, so the points land where its markers are:
-unbinding held at (k_off,s, k_off,n) = (0.05, 0.20), transcription at
-k_y = 20 gamma, and only the binding rates move.  Both topologies take those
-same four rates; nothing is matched or retuned between them, which is the point
--- ``fig_7`` asks what the topology alone does, not what a matched moment does.
-
-    A  k_on = (0.01, 0.01)   d_TV = 0.006   deeply bursty, both ON ~20% of the time
-    B  k_on = (0.10, 0.40)   d_TV = 0.105   the ridge: the two are furthest apart
-    C  k_on = (1.00, 1.00)   d_TV = 0.046   mostly ON, bursts are long
-    D  k_on = (100, 100)     d_TV = 0.001   saturated; binding is no longer rate limiting
-
-Reading down the rows, the promoter goes from rare, well separated bursts to
-permanent occupancy, and the two topologies' laws converge as it does: at D the
-site is re-bound so fast after every release that whether the factors can be
-co-bound stops mattering at all.
-
-The topologies themselves:
-
-monomer (M)
-    one site the two factors compete for, S <- 0 -> N.  Occupancy is exclusive,
-    so an ON period is a single sojourn and ends at beta_s or beta_n.
-
-heterodimer (HD)
-    two independent sites, transcribing whenever either is bound.  From 11 a
-    site can release and rebind without the promoter ever going quiet, so ON
-    periods run longer than either beta alone would give.
-
-Trajectories are drawn by Gillespie on the same jump chains the inference layer
-uses (:data:`stochtf.inference.models.PROMOTERS`), and the stationary laws come
-from the same sFSP solve fig 5 and the likelihood use
-(:mod:`stochtf.cme.stationary`), so neither is a second implementation of
-something already in the package -- the d_TV printed here reproduces fig 5's.
-
 Usage
 -----
     python figures/fig_7_fb_traces.py
@@ -90,9 +49,7 @@ LABELS = {"monomer": "M", "heterodimer": "HD"}
 COLOURS = {"monomer": "#c0562b", "heterodimer": "#1f5f8b"}
 
 
-# ----------------------------------------------------------------------
 # trajectories
-# ----------------------------------------------------------------------
 
 @njit(cache=True)
 def _trajectory(starts, targets, rates, act, k_y, gamma, dt, n_grid, s0,
@@ -240,9 +197,7 @@ def on_intervals(sw_t, sw_s, act, t0, t1):
     return np.column_stack([start - t0, stop - start])
 
 
-# ----------------------------------------------------------------------
 # exact kinetics at one point
-# ----------------------------------------------------------------------
 
 def kinetics(promoter, rates4):
     """Stationary law and exact burst kinetics for one topology at one point.
@@ -299,9 +254,7 @@ def total_variation(p, q):
     return 0.5 * float(np.abs(a - b).sum())
 
 
-# ----------------------------------------------------------------------
 # the figure
-# ----------------------------------------------------------------------
 
 def draw(results, span):
     """One row per point: ON ribbons, both traces, both stationary laws."""
@@ -394,8 +347,6 @@ def draw(results, span):
     return fig
 
 
-# ----------------------------------------------------------------------
-
 def main():
     """Builds the trace figure and writes it out."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -436,7 +387,6 @@ def main():
                     bbox_inches="tight", facecolor="w")
     plt.close(fig)
 
-    # ---- numbers worth quoting ---------------------------------------
     print(f"k_off = ({BETA_S}, {BETA_N}),  k_y = {K_Y:g} gamma,  "
           f"{args.span:g} lifetimes per trace")
     for row in results:

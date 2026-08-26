@@ -59,7 +59,6 @@ def heat(a, Z, title, cmap, norm, cb_label, levels=None):
     cb.ax.tick_params(labelsize=6)
     a.set_title(title, fontsize=9)
 
-# 1. Define the grid and calculate the Total Variation heatmap ONCE
 al = np.logspace(-2.5, 2.5, NGRID)
 X, Y = np.meshgrid(al, al)
 TV = np.zeros_like(X)
@@ -70,7 +69,6 @@ for i in range(X.shape[0]):
         Ph, Pm, _, _ = both_models(build(X[i, j], Y[i, j]))
         TV[i, j] = 0.5 * np.abs(Ph - Pm).sum()
 
-# 2. Four points of decreasing total variation, bottom-left to top-right.
 dist_pts = [
     (0.01, 0.01),   # High TV (bursty regime)
     (0.1, 0.4),     # Moderate-High TV
@@ -84,7 +82,6 @@ for x, y in dist_pts:
     tv = 0.5 * np.abs(Ph - Pm).sum()
     dists.append((x, y, Ph, Pm, tv))
 
-# 3. Setup Layout: 1 large plot (heatmap) left, 2x2 grid (distributions) right
 fig = plt.figure(figsize=(12, 5))
 gs = GridSpec(2, 4, figure=fig, wspace=0.5, hspace=0.6)
 
@@ -104,7 +101,6 @@ orig_cmap = plt.get_cmap("RdBu_r")
 white_to_red = orig_cmap(np.linspace(0.5, 1.0, 256))
 half_RdBu = LinearSegmentedColormap.from_list("half_RdBu", white_to_red)
 
-# 4. Plot Heatmap
 heat(ax_heat, TV, 
      title=rf"Total Variation $d_{{\rm TV}}(P_{{\rm HD}}, P_{{\rm {LBL_M}}})$",
      cmap=half_RdBu, norm=Normalize(vmin=0, vmax=np.max(TV)), cb_label=r"$d_{\rm TV}$", levels=[0.025, 0.05, 0.1, 0.2])
@@ -113,7 +109,6 @@ ax_heat.set_xlabel(r"$k_{on, s}$ " + RATE)
 ax_heat.set_ylabel(r"$k_{on, n}$ " + RATE)
 
 
-# 5. Plot Distributions & Mark Heatmap
 for k, (x, y, Ph, Pm, tv) in enumerate(dists):
     # Plot point on the heatmap
     ax_heat.scatter(x, y, color='white', edgecolor='black', marker=markers[k], s=40, zorder=5)
