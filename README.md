@@ -1,4 +1,4 @@
-# stochtf — stochastic modelling of NANOG/SOX2 dynamics in gene expression noise
+# stochastic modelling of NANOG/SOX2 gene expression
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
@@ -344,10 +344,10 @@ extra installed.
 │   ├── plotting.py       shared figure style, palette, output paths
 │   └── paths.py          project directory resolution
 ├── figures/              one script per paper figure -> figures/output/
-├── scripts/              entry points (download, prepare, run, fit)
+├── scripts/              misc. code to run inference, download data, etc.
 ├── notebooks/            exploratory and diagnostic notebooks
 ├── tests/                pytest suite
-└── data/                 processed and synthetic arrays (raw is downloaded)
+└── data/                 processed and synthetic data (raw is downloaded)
 ```
 
 ## Citing
