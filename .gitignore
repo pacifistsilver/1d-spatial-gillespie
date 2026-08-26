@@ -66,15 +66,7 @@ dmypy.json
 
 # Raw data is downloaded, never committed (see scripts/download_data.py)
 /data/raw/
-<<<<<<< HEAD
-<<<<<<< HEAD
 /data/*.npy
-=======
-/data/*.csv
->>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
-=======
-/data/*.csv
->>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 
 # Inference traces and simulation outputs are regenerated
 /results/
@@ -85,28 +77,7 @@ dmypy.json
 /.archive/
 /output/
 *.log
-<<<<<<< HEAD
-<<<<<<< HEAD
 *.txt
 *.png
 *.svg
 *.csv
-=======
-=======
->>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
-
-# Editor-local Claude settings
-/.claude/
-
-# Orphaned diagnostic plot dumps with no generating script in the repo. Kept
-# on disk but untracked; regenerate from notebooks/05_abc_diagnostics.ipynb or
-# delete. See the PR discussion.
-/bmb_chp02_plots/
-/exploratory_plots/
-/ppc_plots/
-
-# figures/output/ IS tracked: it holds the publication figures.
-<<<<<<< HEAD
->>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
-=======
->>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)

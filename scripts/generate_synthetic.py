@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 """Generate synthetic count data from known parameters, for inference validation.
 
 Simulating from a known ground truth and re-fitting it is how the inference is
@@ -21,31 +19,12 @@ Two generators
     why parameters could not be recovered from it. Kept for comparison.
 
 Rates are in units of gamma; see stochtf.inference.models.
-=======
-=======
->>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
-"""Generate synthetic count data from known parameters, for ABC validation.
-
-Simulating from a known ground truth and re-fitting it is how the ABC-SMC setup
-is checked: the posterior should cover ``TRUE_PARAMS``.
-<<<<<<< HEAD
->>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
-=======
->>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 
 Usage
 -----
     python scripts/generate_synthetic.py --model heterodimer
-<<<<<<< HEAD
-<<<<<<< HEAD
     python scripts/generate_synthetic.py --model telegraph --n-cells 800
     python scripts/generate_synthetic.py --model heterodimer --method ssa
-=======
-    python scripts/generate_synthetic.py --model monomer --n-cells 40
->>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
-=======
-    python scripts/generate_synthetic.py --model monomer --n-cells 40
->>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 """
 
 import argparse
@@ -53,8 +32,6 @@ import os
 
 import numpy as np
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 from stochtf.analytical import pgf
 from stochtf.paths import SYNTHETIC_DATA_DIR
 from stochtf.ssa.fast import fast_ssa_dimer, fast_ssa_monomer
@@ -63,21 +40,12 @@ from stochtf.ssa.fast import fast_ssa_dimer, fast_ssa_monomer
 #: "per mRNA lifetime"). Slow switching and a large k_y put this in the bursty
 #: regime, where the promoter state leaves a visible signature in the counts.
 TRUE_PARAMS = {
-    "alpha_s": 0.3,
-    "beta_s": 0.2,
-    "alpha_n": 0.15,
-    "beta_n": 0.5,
+    "alpha_s": 0.01,
+    "beta_s": 0.06,
+    "alpha_n": 1.0,
+    "beta_n": 0.24,
     "gamma_y": 1.0,
-    "k_y": 40.0,
-}
-
-#: Single-site truth. Only this model is fully identifiable from stationary
-#: counts -- see stochtf.inference.identifiability.
-TELEGRAPH_TRUE = {
-    "alpha_s": 0.3,
-    "beta_s": 0.2,
-    "gamma_y": 1.0,
-    "k_y": 40.0,
+    "k_y": 20.0,
 }
 
 SSA_SIMULATORS = {"monomer": fast_ssa_monomer, "heterodimer": fast_ssa_dimer}
@@ -92,19 +60,8 @@ SITE_OFF = 1e-9
 
 def truth_for(model):
     """(alpha_s, beta_s, alpha_n, beta_n, k_y) in units of gamma."""
-    if model == "telegraph":
-        t = TELEGRAPH_TRUE
-        return (t["alpha_s"], t["beta_s"], SITE_OFF, 1.0, t["k_y"])
     t = TRUE_PARAMS
     return (t["alpha_s"], t["beta_s"], t["alpha_n"], t["beta_n"], t["k_y"])
-
-
-def generate_stationary(model, n_cells, seed):
-    """Draw iid counts from the exact stationary distribution."""
-    a_s, b_s, a_n, b_n, k_y = truth_for(model)
-    p = pgf.stationary_pmf(a_s, b_s, a_n, b_n, k_y, 1.0, GATES[model])
-    rng = np.random.default_rng(seed)
-    return rng.choice(p.size, size=n_cells, p=p / p.sum()).astype(float)
 
 
 def generate_ssa(model, n_cells, t_max):
@@ -119,37 +76,10 @@ def generate_ssa(model, n_cells, t_max):
                               TRUE_PARAMS["gamma_y"], t_max)
     return counts.flatten()
 
-=======
-=======
->>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
-from stochtf.inference.abc_smc import fast_ssa_dimer, fast_ssa_monomer
-from stochtf.paths import SYNTHETIC_DATA_DIR
-
-#: Ground-truth rates the synthetic data is generated from.
-TRUE_PARAMS = {
-    "alpha_s": 0.5,
-    "beta_s": 0.06,
-    "alpha_n": 0.3,
-    "beta_n": 0.2,
-    "gamma_y": 0.005,
-    "k_y": 0.1,
-}
-
-SIMULATORS = {"monomer": fast_ssa_monomer, "heterodimer": fast_ssa_dimer}
-
-#: Each SSA call returns 10 observations, one per sampling time.
-OBS_PER_CELL = 10
-
-<<<<<<< HEAD
->>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
-=======
->>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-<<<<<<< HEAD
-<<<<<<< HEAD
     ap.add_argument("--model", choices=sorted(GATES), default="heterodimer")
     ap.add_argument("--method", choices=["stationary", "ssa"], default="stationary")
     ap.add_argument("--n-cells", type=int, default=800)
@@ -158,10 +88,7 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
 
-    if args.method == "stationary":
-        flat = generate_stationary(args.model, args.n_cells, args.seed)
-    else:
-        flat = generate_ssa(args.model, args.n_cells, args.t_max)
+    flat = generate_ssa(args.model, args.n_cells, args.t_max)
 
     a_s, b_s, a_n, b_n, k_y = truth_for(args.model)
     mean, var, fano = pgf.moments(a_s, b_s, a_n, b_n, k_y, 1.0, GATES[args.model])
@@ -173,36 +100,6 @@ def main():
     print(f"true stationary : mean {mean:8.3f}  Fano {fano:7.3f}")
     print(f"generated       : mean {flat.mean():8.3f}  Fano "
           f"{flat.var() / flat.mean():7.3f}  n {flat.size}")
-=======
-=======
->>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
-    ap.add_argument("--model", choices=sorted(SIMULATORS), default="heterodimer")
-    ap.add_argument("--n-cells", type=int, default=40)
-    ap.add_argument("--t-max", type=float, default=1000.0)
-    args = ap.parse_args()
-
-    simulator = SIMULATORS[args.model]
-    counts = np.empty((args.n_cells, OBS_PER_CELL))
-    for i in range(args.n_cells):
-        counts[i] = simulator(
-            TRUE_PARAMS["alpha_s"],
-            TRUE_PARAMS["beta_s"],
-            TRUE_PARAMS["alpha_n"],
-            TRUE_PARAMS["beta_n"],
-            TRUE_PARAMS["k_y"],
-            TRUE_PARAMS["gamma_y"],
-            args.t_max,
-        )
-
-    flat = counts.flatten()
-    os.makedirs(SYNTHETIC_DATA_DIR, exist_ok=True)
-    out = os.path.join(SYNTHETIC_DATA_DIR, f"synthetic_{args.model}_data.npy")
-    np.save(out, flat)
-    print(f"mean {flat.mean():.3f}  var {flat.var():.3f}  n {flat.size}")
-<<<<<<< HEAD
->>>>>>> 96a2b5c (refactor: restructure into an installable package for publication)
-=======
->>>>>>> 3915fd7 (refactor: restructure into an installable package for publication)
     print(f"Wrote {out}")
 
 

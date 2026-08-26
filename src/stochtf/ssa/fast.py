@@ -1,27 +1,8 @@
-<<<<<<<< HEAD:src/stochtf/ssa/fast.py
-"""Numba-compiled Gillespie simulators for the promoter models.
-
-These were the ABC-SMC simulators. Inference now uses the exact stationary
-likelihood (:mod:`stochtf.inference.likelihood`), so they are no longer in that
-path; they are kept because they generate the synthetic validation data and are
-the independent ground truth the analytical results are checked against.
-
-Each returns 10 counts sampled along a single trajectory at
-``t_max/10, ..., t_max``. Those are autocorrelated samples of one cell, not 10
-independent cells -- which was part of why the ABC likelihood was mis-specified.
-"""
-
 import numpy as np
 from numba import njit
-from stochtf.ssa.params import monomer_params
-
-========
-import numpy as np
-from numba import njit, prange
 
 from stochtf.ssa.params import monomer_params
 
->>>>>>>> 96a2b5c (refactor: restructure into an installable package for publication):src/stochtf/inference/abc_smc.py
 params, initial_state, stoichiometry = monomer_params
 
 
@@ -36,11 +17,11 @@ def fast_ssa_monomer(alpha_s, beta_s, alpha_n, beta_n, k_y, gamma_y, t_max):
 
     
     while t < t_max:
-        nf, sf, nb, sb, y = state
+        fs, nb, sb, y = state
         
-        p0 = alpha_s * sf
+        p0 = alpha_s * fs
         p1 = beta_s * sb
-        p2 = alpha_n * nf
+        p2 = alpha_n * fs
         p3 = beta_n * nb
         p4 = k_y * (nb + sb)
         p5 = gamma_y * y
