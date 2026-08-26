@@ -57,6 +57,8 @@ from pymc_extras.model_builder import ModelBuilder
 from pytensor.graph.basic import Apply
 from pytensor.graph.op import Op
 
+from scipy.special import expit, logsumexp
+
 from stochtf import constants
 from stochtf.cme import stationary as cme_stationary
 from stochtf.inference.likelihood import MIN_PROB, prepare_counts
@@ -864,6 +866,132 @@ def model_probabilities(idata, heterodimer_prior=DEFAULT_HETERODIMER_PRIOR):
     return {"monomer": p_mono, "heterodimer": p_het,
             "bayes_factor_het_over_mono": bayes_factor,
             "n_draws": index.size}
+
+
+def log_marginal_likelihood(idata):
+    """Extracts the SMC log marginal likelihood, one estimate per chain.
+
+    ``pm.sample_smc`` accumulates log Z as it anneals and records the running
+    value once per stage, writing NaN for every stage before the last. Chains
+    can take different numbers of stages, so the stat may arrive ragged, as an
+    object array; both layouts are handled here.
+
+    Args:
+        idata: ``InferenceData`` from an SMC fit.
+
+    Returns:
+        One log-evidence estimate per chain.
+
+    Raises:
+        KeyError: If the trace carries no ``log_marginal_likelihood`` stat,
+            which means it did not come from ``pm.sample_smc``.
+    """
+    if "sample_stats" not in idata.groups() or \
+            "log_marginal_likelihood" not in idata["sample_stats"]:
+        raise KeyError("no log_marginal_likelihood in the trace: SMC records "
+                       "it, other samplers do not")
+
+    stat = np.asarray(idata["sample_stats"]["log_marginal_likelihood"])
+    per_chain = []
+    for row in stat:
+        values = np.asarray(list(row) if stat.dtype == object else row,
+                            dtype="float64").ravel()
+        finite = values[np.isfinite(values)]
+        if finite.size == 0:
+            raise ValueError("a chain finished with no finite log Z estimate")
+        # Only the beta = 1 stage carries the completed estimate.
+        per_chain.append(float(finite[-1]))
+    return np.asarray(per_chain)
+
+
+def pool_log_evidence(per_chain):
+    """Pools per-chain log-evidence estimates onto one number.
+
+    SMC's estimator is unbiased for Z rather than for log Z, so the chains are
+    averaged on the Z scale -- logsumexp minus log(n) -- not by taking the mean
+    of the logs.
+
+    Args:
+        per_chain: One log-evidence estimate per chain.
+
+    Returns:
+        A tuple (log_evidence, spread): the pooled estimate, and the standard
+        deviation of the per-chain logs. A spread of more than a unit or two
+        means the estimates disagree by more than the Bayes factor can absorb,
+        and the fit needs more particles before the comparison means anything.
+    """
+    per_chain = np.asarray(per_chain, dtype="float64")
+    pooled = logsumexp(per_chain) - np.log(per_chain.size)
+    spread = float(per_chain.std(ddof=1)) if per_chain.size > 1 else 0.0
+    return float(pooled), spread
+
+
+def compare_topologies(counts, sampler_config=None, model_config=None,
+                       heterodimer_prior=DEFAULT_HETERODIMER_PRIOR,
+                       progressbar=False, return_models=False, **kwargs):
+    """Fits each topology on its own and compares them by marginal likelihood.
+
+    The alternative to :class:`JointModel`. There the topology is a parameter
+    of one encompassing model and the Bayes factor is read off how long the
+    sampler spends in each branch, which is only trustworthy if it crosses
+    between them freely. Here each topology gets its own run and its own
+    evidence, so the comparison never depends on that mixing -- at the cost of
+    resting on two separately estimated log Z values, which are noisy. Running
+    both routes and checking they agree is the point of having them.
+
+    Both fits see the same counts, priors and scoring method, which is what
+    makes the ratio a Bayes factor rather than an artefact of the setup.
+
+    Args:
+        counts: Molecule numbers, one per cell.
+        sampler_config: Overrides for draws and chains, applied to both fits.
+        model_config: Model config applied to both fits. Defaults if None.
+        heterodimer_prior: Prior probability assigned to the heterodimer, used
+            only to turn the Bayes factor into posterior probabilities.
+        progressbar: Whether to show the sampler progress bar.
+        return_models: Whether to include the two fitted models in the result.
+        **kwargs: Forwarded to each fit.
+
+    Returns:
+        A dict with the same ``monomer``, ``heterodimer`` and
+        ``bayes_factor_het_over_mono`` keys as :func:`model_probabilities`, so
+        the two routes are directly comparable, plus the log evidence of each
+        topology, its per-chain spread, and ``log_bayes_factor_het_over_mono``.
+        With ``return_models`` set, the fitted models are included under
+        ``models``.
+    """
+    fits, evidence, spreads = {}, {}, {}
+    for name in ("monomer", "heterodimer"):
+        model = MODELS[name](model_config=dict(model_config)
+                             if model_config else None)
+        config = dict(model.get_default_sampler_config())
+        if sampler_config:
+            config.update(sampler_config)
+        model.fit(counts, sampler_config=config, progressbar=progressbar,
+                  sample_prior=False, **kwargs)
+        per_chain = log_marginal_likelihood(model.idata)
+        evidence[name], spreads[name] = pool_log_evidence(per_chain)
+        fits[name] = model
+
+    log_bf = evidence["heterodimer"] - evidence["monomer"]
+    log_prior_odds = np.log(heterodimer_prior / (1.0 - heterodimer_prior))
+    # In log space throughout: exp(log_bf) overflows long before the
+    # probability itself stops being representable.
+    p_het = float(expit(log_bf + log_prior_odds))
+
+    result = {
+        "monomer": 1.0 - p_het,
+        "heterodimer": p_het,
+        "bayes_factor_het_over_mono": float(np.exp(log_bf)),
+        "log_bayes_factor_het_over_mono": float(log_bf),
+        "log_evidence_monomer": evidence["monomer"],
+        "log_evidence_heterodimer": evidence["heterodimer"],
+        "log_evidence_spread_monomer": spreads["monomer"],
+        "log_evidence_spread_heterodimer": spreads["heterodimer"],
+    }
+    if return_models:
+        result["models"] = fits
+    return result
 
 
 MODELS = {"monomer": MonomerModel, "heterodimer": HeterodimerModel,
