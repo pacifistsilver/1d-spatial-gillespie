@@ -46,6 +46,13 @@ def sha256(path, chunk=1 << 20):
 
 
 def download(name, url, dest):
+    """Downloads one file, reporting progress as it goes.
+
+    Args:
+        name: Human-readable name used in progress output.
+        url: Source URL.
+        dest: Destination path on disk.
+    """
     import gzip
     import shutil
 
@@ -59,6 +66,7 @@ def download(name, url, dest):
 
 
 def main():
+    """Parses arguments and downloads the GEO tables."""
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true",

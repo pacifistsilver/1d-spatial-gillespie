@@ -1,3 +1,5 @@
+"""Burst kinetics of the heterodimer promoter across the rate plane."""
+
 import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
@@ -22,7 +24,18 @@ def M_kin(a_s, b_s, a_n, b_n, ky):
             m_model.burst_size(a_s, b_s, a_n, b_n, ky))
 
 def hd_kin(a_s, b_s, a_n, b_n, ky):
-    """(tau_on, tau_off, f, b) for the heterodimer model."""
+    """Returns the burst kinetics of the heterodimer model.
+
+    Args:
+        a_s: SOX2 binding rate.
+        b_s: SOX2 unbinding rate.
+        a_n: NANOG binding rate.
+        b_n: NANOG unbinding rate.
+        ky: Transcription rate in the active states.
+
+    Returns:
+        A tuple (tau_on, tau_off, f, b).
+    """
     return (hd_model.t_on(a_s, b_s, a_n, b_n),
             hd_model.t_off(a_s, b_s, a_n, b_n),
             hd_model.burst_frequency(a_s, b_s, a_n, b_n),
@@ -42,6 +55,13 @@ def add_burst_size_axis(a, ky):
     Both models define b = k_y * tau_on exactly, so the two quantities are one
     curve under two units: a second axis scaled by k_y shows both without
     drawing every line twice.
+
+    Args:
+        a: Axes to add the secondary axis to.
+        ky: Transcription rate converting tau_on to burst size.
+
+    Returns:
+        The secondary axis.
     """
     secondary = a.secondary_yaxis("right", functions=(lambda t: ky * t,
                                                       lambda b: b / ky))
@@ -50,7 +70,8 @@ def add_burst_size_axis(a, ky):
 
 
 betas = np.logspace(-3, 0, 400)
-M = np.array([M_kin(AS, b, AN, b, k_y) for b in betas]).T     # tau_on, tau_off, f, b
+# Rows: tau_on, tau_off, f, b.
+M = np.array([M_kin(AS, b, AN, b, k_y) for b in betas]).T
 hd  = np.array([hd_kin(AS, b, AN, b, k_y) for b in betas]).T
 
 # ---- (a) tau_on and burst size vs k_off
@@ -72,7 +93,8 @@ a.set_xlabel(r"$k_{off}$ (s$^{-1}$)"); a.set_ylabel(r"Burst Frequency ($\gamma^{
 
 # alphas
 al = np.logspace(-3, 3, 300)
-M = np.array([M_kin(a, BS, a, BN, k_y) for a in al]).T     # tau_on, tau_off, f, b
+# Rows: tau_on, tau_off, f, b.
+M = np.array([M_kin(a, BS, a, BN, k_y) for a in al]).T
 hd  = np.array([hd_kin(a, BS, a, BN, k_y) for a in al]).T
 
 # ---- (a) tau_on and burst size vs k_on

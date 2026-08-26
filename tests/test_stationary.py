@@ -83,6 +83,9 @@ def test_redirection_gives_a_valid_generator(chain):
 
     This is the point of redirecting rather than absorbing: the projected chain
     stays conservative, so it has a real stationary distribution.
+
+    Args:
+        chain: Promoter chain under test.
     """
     Q, act = CHAINS[chain](*CASES[0][1:5])
     Qbar, c = redirected_generator(Q, act, CASES[0][5], GAMMA, y_max=40)
@@ -200,7 +203,7 @@ def test_expansion_stops_once_the_tolerance_is_met():
 @pytest.mark.parametrize("chain", sorted(CHAINS))
 @pytest.mark.parametrize("case", CASES, ids=IDS)
 def test_drift_condition_holds_for_the_lyapunov_function(chain, case):
-    """V = 1 + y must satisfy QV <= C1 - C2 V, which is what licenses the bound."""
+    """V = 1 + y must satisfy QV <= C1 - C2 V, which licenses the bound."""
     _, a_s, b_s, a_n, b_n, k_y = case
     _, act = CHAINS[chain](a_s, b_s, a_n, b_n)
     C1, C2 = st.drift_constants(act, k_y, GAMMA)

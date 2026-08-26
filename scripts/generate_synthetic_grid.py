@@ -54,6 +54,7 @@ GRID_LO, GRID_HI = -2.5, 2.5
 
 
 def main():
+    """Parses arguments and simulates counts across the binding-rate grid."""
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)

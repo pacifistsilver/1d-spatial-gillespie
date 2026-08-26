@@ -25,12 +25,15 @@ def test_the_two_sites_are_exchangeable(gate):
 
     So (alpha_s, beta_s) and (alpha_n, beta_n) are identifiable only as an
     unordered pair, and the posterior has two equivalent modes.
+
+    Args:
+        gate: Promoter logic under test.
     """
     assert ident.exchange_symmetry_residual(TWO_SITE, gate) < 1e-12
 
 
 def test_single_site_telegraph_is_identifiable():
-    """alpha, beta and k_y are all determined, as the Poisson-Beta literature says."""
+    """alpha, beta and k_y are all determined, as the literature reports."""
     se = ident.standard_errors(SINGLE_SITE, N_OBS, "OR", free=[0, 1, 4])
     assert np.all(se < 0.2), f"expected all under 20%, got {se * 100}"
 

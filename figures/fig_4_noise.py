@@ -1,4 +1,3 @@
-
 """
 Noise and count distributions for HD vs M, everything from the exact
 stationary solution of the joint (promoter, mRNA) CME.
@@ -47,6 +46,15 @@ def excl_Q(a_s, b_s, a_n, b_n):
     State order [0, S, N].  A bound factor must leave before the other can
     bind, so there is no S <-> N edge and the ON set is two states each
     with a single exit.
+
+    Args:
+        a_s: SOX2 binding rate.
+        b_s: SOX2 unbinding rate.
+        a_n: NANOG binding rate.
+        b_n: NANOG unbinding rate.
+
+    Returns:
+        The three-state generator, in state order [0, S, N].
     """
     Q = np.array([[0., a_s, a_n],
                   [b_s, 0., 0.],
@@ -71,6 +79,16 @@ def excl_kinetics(a_s, b_s, a_n, b_n, ky=KY):
     An ON period is a single sojourn in whichever state was entered, so
         tau_on = phi_s/beta_s + phi_n/beta_n,  phi_j = alpha_j/(alpha_s+alpha_n)
     a mixture of two exponentials -- NOT 1/(beta_s + beta_n).
+
+    Args:
+        a_s: SOX2 binding rate.
+        b_s: SOX2 unbinding rate.
+        a_n: NANOG binding rate.
+        b_n: NANOG unbinding rate.
+        ky: Transcription rate in the active states.
+
+    Returns:
+        A tuple (tau_on, tau_off, f, b, CV_on).
     """
     tot = a_s + a_n
     ph_s, ph_n = a_s/tot, a_n/tot
@@ -110,8 +128,13 @@ def both_models(rates, floor=0):
     what the certificate already bounds, and is what makes P_HD and P_M
     comparable pointwise.  ``floor`` only widens the display panels.
 
-    Returns the two distributions, the exact (truncation-free) Fano factors
-    for validation, and the worse of the two convergence factors.
+    Returns:
+        The two distributions, the exact truncation-free Fano factors for
+        validation, and the worse of the two convergence factors.
+
+    Args:
+        rates: The four switching rates.
+        floor: Probability floor, which only widens the display.
     """
     Qh, Ah = hd_Q(*rates)
     Qm, Am = excl_Q(*rates)
@@ -159,6 +182,13 @@ def make_figure(build, xvals, yvals, xlab, ylab, xref, yref,
     fig, ax = plt.subplots(2, 3, figsize=(11.5, 6.6))
 
     def heat(a, Z, title, cmap, norm, cb_label, levels=None, note=True):
+        """Draws one shaded panel with contours and a colour bar.
+
+        Args:
+            a: Axes to draw on.
+            Z: Values to shade.
+            title: Panel title.
+        """
         im = a.pcolormesh(X, Y, Z, cmap=cmap, norm=norm,
                           shading="auto", rasterized=True)
         if levels is not None:

@@ -118,6 +118,9 @@ def test_simulator_reproduces_the_stationary_mean(promoter):
 
     The old simulator recorded ten correlated points along one burning-in
     trajectory and missed this by a wide margin.
+
+    Args:
+        promoter: Promoter topology under test.
     """
     y = simulate(promoter)
     expected = exact_mean(promoter, *RATES)
@@ -136,12 +139,16 @@ def test_simulator_is_stationary_in_the_tail_too(promoter):
 
 @pytest.mark.parametrize("promoter", sorted(PROMOTERS))
 def test_simulator_is_invariant_under_rescaling_time(promoter):
-    """Only ratios to gamma are identifiable, so scaling every rate together
-    must leave the counts alone. This is why GAMMA is pinned at 1.
+    """Checks that scaling every rate together leaves the counts alone.
+
+    Only ratios to gamma are identifiable, which is why GAMMA is pinned at 1.
 
     Regression: KERNEL_HORIZON counts mRNA lifetimes but was passed through as
     absolute time, so for gamma < 1 the kernel was truncated early -- 22% of
     the integral lost at gamma = 0.1, while gamma = 1 stayed correct and hid it.
+
+    Args:
+        promoter: Promoter topology under test.
     """
     a_s, b_s, a_n, b_n, k_y = RATES
     expected = exact_mean(promoter, a_s, b_s, a_n, b_n, k_y)
@@ -174,7 +181,7 @@ def test_simulator_is_reproducible(promoter):
 @pytest.mark.parametrize("promoter", sorted(PROMOTERS))
 @pytest.mark.parametrize("bad", [
     (0.0, 0.06, 0.0, 0.24, 20.0),    # neither factor can bind
-    (1.0, 0.0, 0.15, 0.24, 20.0),    # beta_s = 0: bound forever, no stationarity
+    (1.0, 0.0, 0.15, 0.24, 20.0),   # beta_s = 0: bound forever, not stationary
     (-1.0, 0.06, 0.15, 0.24, 20.0),  # negative rate
     (1.0, 0.06, 0.15, 0.24, np.nan),
 ])
@@ -209,7 +216,7 @@ def test_off_rates_are_pinned_by_default(name):
 
 @pytest.mark.parametrize("name", SINGLE_MODELS)
 def test_pinned_values_reach_the_simulator(name):
-    """A pinned rate must be the stated number, not merely absent from the trace."""
+    """A pinned rate must be the stated number, not just absent from it."""
     cfg = {**MODELS[name].get_default_model_config(), "method": "abc"}
     built = MODELS[name](model_config=cfg).build_model(y=COUNTS)
     (observed,) = built.observed_RVs
@@ -228,6 +235,9 @@ def test_pinned_values_reach_the_exact_likelihood(name):
 
     Stronger than reading the constants back out of the graph: it pins down
     what the sampler is actually being handed.
+
+    Args:
+        promoter: Promoter topology under test.
     """
     built = MODELS[name]().build_model(y=COUNTS)
     point = built.initial_point()
@@ -243,7 +253,7 @@ def test_pinned_values_reach_the_exact_likelihood(name):
 
 @pytest.mark.parametrize("name", SINGLE_MODELS)
 def test_clearing_the_pin_restores_the_prior(name):
-    """The pinning has to be reversible, or the four-rate model is unreachable."""
+    """Pinning has to be reversible, or the four-rate model is unreachable."""
     cfg = {**MODELS[name].get_default_model_config(),
            "beta_s_fixed": None, "beta_n_fixed": None}
     built = MODELS[name](model_config=cfg).build_model(y=COUNTS)
@@ -273,7 +283,7 @@ def test_abc_method_puts_a_simulator_in_the_graph(name):
 
 @pytest.mark.parametrize("name", sorted(MODELS))
 def test_exact_method_scores_through_a_potential(name):
-    """SMC tempers model.datalogp, so the term must land there, not in the prior."""
+    """SMC tempers model.datalogp, so the term must land there."""
     built = MODELS[name]().build_model(y=COUNTS)
     assert not built.observed_RVs
     data_logp = float(built.compile_fn(built.datalogp)(built.initial_point()))
@@ -290,7 +300,8 @@ def test_logp_is_finite_and_varies_with_the_parameters(name, method):
 
     point = built.initial_point()
     near = float(logp(point))
-    far = float(logp({k: v + 4.0 for k, v in point.items()}))  # priors are logged
+    # Priors are logged.
+    far = float(logp({k: v + 4.0 for k, v in point.items()}))
     assert np.isfinite(near)
     assert near > far
 
@@ -306,7 +317,7 @@ def test_epsilon_is_resolved_from_the_data_and_recorded(name):
     epsilon = model.model_config["epsilon"]
     assert epsilon == pytest.approx(0.25 * counts.std())
 
-    # Once resolved it is reused, so refitting cannot silently change the target.
+    # Once resolved it is reused, so refitting cannot change the target.
     model.build_model(y=counts * 10)
     assert model.model_config["epsilon"] == pytest.approx(epsilon)
 
@@ -375,7 +386,7 @@ def test_logp_op_pickles_with_its_data(promoter):
 
 
 def test_distinct_datasets_never_compare_equal():
-    """No __props__, so graph merging cannot swap one dataset's Op for another."""
+    """No __props__, so graph merging cannot swap one dataset for another."""
     assert (StationaryLogLike(COUNTS, "heterodimer")
             != StationaryLogLike(COUNTS + 1, "heterodimer"))
     assert (StationaryLogLike(COUNTS, "heterodimer")
@@ -407,6 +418,9 @@ def test_joint_likelihood_matches_the_selected_topology(index, promoter):
 
     Without this the index could be sampled perfectly and still be comparing
     the wrong pair of distributions.
+
+    Args:
+        index: Model index under test.
     """
     a_s, b_s, a_n, b_n, k_y = RATES
     op = JointStationaryLogLike(COUNTS)

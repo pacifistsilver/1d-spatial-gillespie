@@ -64,6 +64,7 @@ def save(path, results):
 
 
 def main():
+    """Parses arguments and fits the joint model per gene."""
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)

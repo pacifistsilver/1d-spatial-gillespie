@@ -48,8 +48,15 @@ GRID_FILE = "heterodimer_grid.npz"
 
 
 def load_counts(gene):
-    """Per-cell counts for one gene: real ones live under data/processed,
-    the ``synthetic_*`` ones under data/synthetic."""
+    """Loads the per-cell count vector for one gene.
+
+    Args:
+        gene: Gene name. Real genes are read from data/processed, the
+            ``synthetic_*`` datasets from data/synthetic.
+
+    Returns:
+        The counts as a 1-D array.
+    """
     if gene.startswith("synthetic_"):
         return np.load(paths.synthetic(f"{gene}.npy"))
     return np.load(paths.processed(f"{gene}.npy"))
@@ -70,6 +77,11 @@ def fit_counts(counts, model_name, draws, chains, progressbar=False,
 
 
 def run_single(args):
+    """Fits one dataset and writes the trace.
+
+    Args:
+        args: Parsed command-line arguments.
+    """
     data = load_counts(args.gene)
     print(f"Fitting {args.model} to {args.gene}: {data.shape} observations "
           f"(mean {data.mean():.1f}, Fano {data.var() / data.mean():.1f})")
@@ -163,6 +175,7 @@ def run_grid(args):
 
 
 def main():
+    """Parses arguments and dispatches to a single fit or a sweep."""
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)

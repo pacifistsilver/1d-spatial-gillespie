@@ -103,9 +103,17 @@ def save_cache():
 
 
 def fetch(url, accept="application/json", tries=5):
-    """GET with backoff and an on-disk cache.
+    """Fetches a URL with backoff, caching the response on disk.
 
     Ensembl rate-limits and returns 503 under load, hence the retry.
+
+    Args:
+        url: URL to fetch.
+        accept: Value for the Accept header.
+        tries: Attempts before giving up.
+
+    Returns:
+        The decoded response body.
     """
     if url in _CACHE["data"]:
         return _CACHE["data"][url]
@@ -140,6 +148,15 @@ def gene_locus(symbol):
 
 
 def regulatory_features(locus, window):
+    """Fetches annotated regulatory features overlapping a locus.
+
+    Args:
+        locus: Locus to query, as a region string.
+        window: Flanking window in base pairs.
+
+    Returns:
+        The regulatory features overlapping the window.
+    """
     lo = max(1, locus["start"] - window)
     hi = locus["end"] + window
     feats = fetch(f"{ENSEMBL}/overlap/region/mus_musculus/"
@@ -186,7 +203,7 @@ def encode(seq):
 
 
 def scan(pwm, codes):
-    """Score every window on the forward strand; NaN where the window has an N."""
+    """Scores every forward-strand window, NaN where the window has an N."""
     width = pwm.shape[1]
     n = codes.size - width + 1
     if n <= 0:
@@ -201,14 +218,22 @@ def scan(pwm, codes):
 
 
 def score_threshold(pwm, p_value, scale=100.0):
-    """Score at which a match is called, for a given per-position p-value.
+    """Returns the score at which a match is called.
 
-    A relative-score cutoff ("80% of the best possible") is the usual quick
-    choice but says nothing about how often the motif turns up by chance, and
-    for short degenerate matrices like these it admits background at a rate
-    that swamps any real site. So the exact null distribution of the score is
-    built instead, by convolving the per-position distributions under the
-    background model, and the threshold is read off its tail.
+    A relative-score cutoff ("80% of the best possible") says nothing about
+    how often the motif turns up by chance, and for short degenerate matrices
+    it admits background at a rate that swamps any real site. The exact null
+    distribution is built instead, by convolving the per-position
+    distributions under the background model, and the threshold read off its
+    tail.
+
+    Args:
+        pwm: Position weight matrix.
+        p_value: Per-position false-positive rate to allow.
+        scale: Discretisation scale for the score distribution.
+
+    Returns:
+        The absolute log-odds score threshold.
     """
     ints = np.rint(pwm * scale).astype(np.int64)
     offset = int(ints.min(axis=0).sum())
@@ -230,9 +255,15 @@ def score_threshold(pwm, p_value, scale=100.0):
 
 
 def find_hits(pwm, seq, threshold):
-    """Hits on both strands as (start, end, strand, score), 0-based.
+    """Finds motif hits on both strands.
 
-    ``threshold`` is an absolute log-odds score from :func:`score_threshold`.
+    Args:
+        pwm: Position weight matrix.
+        seq: Sequence to scan.
+        threshold: Absolute log-odds score from :func:`score_threshold`.
+
+    Returns:
+        Hits as (start, end, strand, score), 0-based and half-open.
     """
     width = pwm.shape[1]
     hits = []
@@ -251,11 +282,16 @@ def find_hits(pwm, seq, threshold):
 # ----------------------------------------------------------------------
 
 def pair_up(sox_hits, nanog_hits):
-    """For each SOX2 hit, its nearest NANOG hit: (gap, overlapping?).
+    """Pairs each SOX2 hit with its nearest NANOG hit.
 
-    ``gap`` is the number of bases between the two footprints; it is negative
-    when they overlap, and that overlap is what makes simultaneous occupancy
-    impossible.
+    Args:
+        sox_hits: SOX2 hits from :func:`find_hits`.
+        nanog_hits: NANOG hits from :func:`find_hits`.
+
+    Returns:
+        One (gap, overlapping) pair per SOX2 hit. The gap counts bases
+        between the two footprints and is negative when they overlap, which
+        is what makes simultaneous occupancy impossible.
     """
     pairs = []
     for s_start, s_end, _, _ in sox_hits:
@@ -280,10 +316,21 @@ def shuffled_hit_count(pwm, seq, threshold, replicates, rng):
 
 
 def repositioned_overlap(sox_hits, n_nanog, width, length, replicates, rng):
-    """Overlap fraction when NANOG hits are dropped at random positions.
+    """Returns the overlap fraction with NANOG hits placed at random.
 
-    Keeps the SOX2 hits and the NANOG hit *count* fixed and only destroys the
-    arrangement, so it isolates whether the observed spacing means anything.
+    Keeps the SOX2 hits and the NANOG hit count fixed and destroys only the
+    arrangement, isolating whether the observed spacing means anything.
+
+    Args:
+        sox_hits: SOX2 hits to keep in place.
+        n_nanog: Number of NANOG hits to scatter.
+        width: Footprint width of a NANOG hit.
+        length: Length of the sequence being scattered over.
+        replicates: Number of random repositionings to average.
+        rng: NumPy generator supplying the positions.
+
+    Returns:
+        The mean fraction of SOX2 hits overlapped across replicates.
     """
     if not sox_hits or n_nanog == 0 or length <= width:
         return np.empty(0)
@@ -299,6 +346,7 @@ def repositioned_overlap(sox_hits, n_nanog, width, length, replicates, rng):
 
 
 def main():
+    """Parses arguments and runs the motif and topology analysis."""
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)

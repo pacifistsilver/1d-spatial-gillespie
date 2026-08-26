@@ -83,6 +83,12 @@ def summarise(idata):
 
     ``round_to="auto"`` would collapse a narrow interval such as k_y's onto a
     single repeated value, so full precision is asked for.
+
+    Args:
+        idata: ``InferenceData`` from a completed fit.
+
+    Returns:
+        One (median, lower, upper) triple per rate.
     """
     stats = az.summary(idata, var_names=RATES, kind="stats", ci_prob=CI_PROB,
                        ci_kind="hdi", round_to=8)
@@ -162,6 +168,7 @@ def draw_triangle(draws, estimate, interval, truth, limits, title):
 
 
 def main():
+    """Builds the particle-grid figure and writes it out."""
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)

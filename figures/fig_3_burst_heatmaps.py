@@ -1,3 +1,5 @@
+"""Burst frequency and size over the (k_on_s, k_on_n) plane, HD against M."""
+
 import os
 import numpy as np
 import matplotlib as mpl
@@ -32,6 +34,13 @@ def hd_kin(a_s, a_n):
 
     tau_on by renewal-reward: the ON:OFF time ratio equals the stationary
     probability ratio, and P_00 = q_s q_n exactly.
+
+    Args:
+        a_s: SOX2 binding rate.
+        a_n: NANOG binding rate.
+
+    Returns:
+        A tuple (tau_on, tau_off, f, b).
     """
     q_s = BS/(a_s + BS)
     q_n = BN/(a_n + BN)
@@ -64,6 +73,13 @@ def tag(a, t):
 
 def heat(a, Z, title, cmap, norm, cb_label, levels=None, lev_c="w",
          lev_fmt="%g", note=None):
+    """Draws one shaded panel with contours and a colour bar.
+
+    Args:
+        a: Axes to draw on.
+        Z: Values to shade.
+        title: Panel title.
+    """
     im = a.pcolormesh(AS, AN, Z, cmap=cmap, norm=norm, shading="auto",
                       rasterized=True)
     if levels is None:

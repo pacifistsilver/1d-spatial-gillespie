@@ -51,6 +51,7 @@ def choose_points(bayes):
 
 
 def main():
+    """Parses arguments and refits the selected grid points."""
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)

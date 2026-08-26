@@ -30,6 +30,14 @@ COMBINED_CSV = os.path.join(DATA_DIR, "combined_allele_data.csv")
 
 
 def get_canonical_transcript(symbol):
+    """Looks up the canonical transcript for one gene symbol.
+
+    Args:
+        symbol: Gene symbol to resolve.
+
+    Returns:
+        The canonical transcript ID, or None if the lookup fails.
+    """
     url = f"https://rest.ensembl.org/lookup/symbol/mouse/{symbol}?expand=1"
     req = urllib.request.Request(url, headers={"Content-Type": "application/json"})
     try:
@@ -45,11 +53,13 @@ def get_canonical_transcript(symbol):
 
 
 def main():
+    """Parses arguments and writes per-gene counts for the marker genes."""
     transcript_mapping = {}
     for name, symbol in GENES.items():
         t_id = get_canonical_transcript(symbol)
         if t_id:
-            transcript_mapping[name] = [t_id]  # Keep it as a list for .isin() later
+            # Keep it as a list so .isin() can be used later.
+            transcript_mapping[name] = [t_id]
             print(f"{name} ({symbol}) canonical transcript: {t_id}")
         else:
             print(f"Failed to find canonical transcript for {name}")

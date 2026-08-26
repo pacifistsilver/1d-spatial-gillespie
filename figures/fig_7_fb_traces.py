@@ -105,6 +105,22 @@ def _trajectory(starts, targets, rates, act, k_y, gamma, dt, n_grid, s0,
     ~40k points per trace and is not what the figure draws -- while promoter
     switches are recorded exactly, because the ON/OFF ribbons resolve gaps
     shorter than dt.
+
+    Args:
+        starts: Offsets into targets/rates, one per state plus a bound.
+        targets: Destination state of each jump.
+        rates: Rate of each jump.
+        act: Per-state transcription activity.
+        k_y: Transcription rate in the active states.
+        gamma: mRNA degradation rate.
+        dt: Grid spacing for the sampled trace.
+        n_grid: Number of grid samples to keep.
+        s0: Initial promoter state.
+        seed: Seed for the generator.
+        max_switch: Cap on promoter switches.
+
+    Returns:
+        A tuple (y_grid, switch_times, switch_states).
     """
     np.random.seed(seed)
     grid_y = np.empty(n_grid, np.int64)
@@ -157,11 +173,22 @@ def _trajectory(starts, targets, rates, act, k_y, gamma, dt, n_grid, s0,
 
 
 def simulate(promoter, rates4, seed, span, burn, n_samples):
-    """One trajectory: grid samples over the plotted window and its ON intervals.
+    """Simulates one trajectory over the plotted window.
 
     The promoter starts from its stationary occupancy and the mRNA pool from
     empty; ``burn`` lifetimes are then simulated and discarded, which is what
     removes the y = 0 transient rather than any equilibration assumption.
+
+    Args:
+        promoter: Topology to simulate.
+        rates4: The four switching rates.
+        seed: Seed for the generator.
+        span: Length of the plotted window, in lifetimes.
+        burn: Lifetimes simulated and discarded first.
+        n_samples: Number of grid samples over the window.
+
+    Returns:
+        The grid samples over the window and its ON intervals.
     """
     a_s, b_s, a_n, b_n = rates4
     starts, targets, rates, act, pi = PROMOTERS[promoter](a_s, b_s, a_n, b_n)
@@ -186,6 +213,17 @@ def on_intervals(sw_t, sw_s, act, t0, t1):
     among 10/01/11 without ever going quiet, and only the return to the silent
     state ends a burst.  Splitting at every switch would draw one burst as
     several and inflate the count by a factor of ~20 at saturation.
+
+    Args:
+        sw_t: Switch times.
+        sw_s: Promoter state after each switch.
+        act: Per-state transcription activity.
+        t0: Start of the window.
+        t1: End of the window.
+
+    Returns:
+        The (start, width) of every burst in [t0, t1),
+        measured from t0.
     """
     on = np.asarray(act)[sw_s] > 0
     ends = np.append(sw_t[1:], max(t1, sw_t[-1]))
@@ -215,6 +253,13 @@ def kinetics(promoter, rates4):
     f = 1/(tau_on + tau_off) and b = k_y tau_on are exact, not bursty-limit
     approximations.  The mean the sFSP solve reports is checked against
     k_y p_on/gamma, which needs no truncation.
+
+    Args:
+        promoter: Topology to evaluate.
+        rates4: The four switching rates.
+
+    Returns:
+        The stationary law and the exact burst kinetics.
     """
     Q, act = chain_generator(promoter, *rates4)
     live = np.flatnonzero(np.asarray(act) > 0)
@@ -240,6 +285,13 @@ def total_variation(p, q):
     Each sFSP solve stops at whatever grid its own certificate accepts, so the
     two can differ by a few counts; zero-extending is what the certificate
     already bounds, and it is what fig 5 does.
+
+    Args:
+        p: First stationary law.
+        q: Second stationary law.
+
+    Returns:
+        The total variation distance between them.
     """
     n = max(p.size, q.size)
     a, b = np.zeros(n), np.zeros(n)
@@ -345,6 +397,7 @@ def draw(results, span):
 # ----------------------------------------------------------------------
 
 def main():
+    """Builds the trace figure and writes it out."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, default=3,
                         help="base seed; each trace gets its own offset")

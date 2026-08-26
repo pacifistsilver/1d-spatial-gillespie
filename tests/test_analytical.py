@@ -43,7 +43,7 @@ def test_mean_expression_matches_burst_decomposition():
 
 
 def test_bound_probability_is_the_exact_stationary_value():
-    """pbound = 1 - q_s q_n, independent of the MFPT route. This one is right."""
+    """Checks pbound = 1 - q_s q_n, independent of the MFPT route."""
     _, _, _, _, q_s, q_n = ts.derived(*PARAMS)
     assert ts.pbound(*PARAMS) == pytest.approx(1.0 - q_s * q_n, rel=1e-12)
 
@@ -69,8 +69,11 @@ def test_pmf_and_pgf_agree_on_the_mean_burst_size():
 
 
 def test_pmf_mean_is_consistent_with_the_bound_probability():
-    """<burst size>/k_y is the mean ON duration, which must satisfy
-    p_bound = t_on / (t_on + t_off). The phase-type PMF does satisfy this."""
+    """Checks the phase-type PMF against the bound probability.
+
+    <burst size>/k_y is the mean ON duration, which must satisfy
+    p_bound = t_on / (t_on + t_off).
+    """
     pmf = ts.burst_size_pmf(*PARAMS, K_Y, mmax=4000)
     m = np.arange(pmf.size)
     t_on_from_pmf = (m * pmf).sum() / K_Y
@@ -93,7 +96,7 @@ def test_burst_size_matches_the_phase_type_pmf():
 
 
 def test_burst_size_is_overdispersed_relative_to_a_single_geometric():
-    """Three geometric components, so CV^2 exceeds the single-geometric value."""
+    """Three geometric components, so CV^2 exceeds the single one."""
     pmf = ts.burst_size_pmf(*PARAMS, K_Y, mmax=4000)
     m = np.arange(pmf.size)
     mean = (m * pmf).sum()
@@ -173,7 +176,7 @@ def test_gillespie_agrees_with_the_phase_type_burst_size():
 
 @pytest.mark.slow
 def test_gillespie_off_duration_is_exponential():
-    """<T_off> = 1/(alpha_s + alpha_n) exactly; this part of the module is right."""
+    """Checks <T_off> = 1/(alpha_s + alpha_n) exactly."""
     _, _, off = ts.gillespie_bursts(*PARAMS, K_Y, n_bursts=60000, seed=1)
     se = off.std(ddof=1) / np.sqrt(off.size)
     assert abs(off.mean() - ts.t_off(*PARAMS)) < 4 * se

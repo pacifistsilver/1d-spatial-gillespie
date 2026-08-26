@@ -55,6 +55,7 @@ def resolve(symbol, present, lookup):
 
 
 def main():
+    """Parses arguments and writes the per-gene count vectors."""
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)

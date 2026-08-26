@@ -25,6 +25,7 @@ def load_counts(gene):
 
 
 def main():
+    """Parses arguments and runs one ABC-SMC fit."""
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--gene", choices=GENES, default="esrrb",

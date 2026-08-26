@@ -30,7 +30,7 @@ DEFAULT_ACTIVE_WINDOW = {"monomer": (1, 100), "homodimer": (1, 200),
 
 
 def summarise(times, states, promoter_idx, mrna_idx, active_window):
-    """Print ON/OFF dwell times and mRNA moments, as the original scripts did."""
+    """Prints the ON/OFF dwell times and the mRNA moments."""
     on_times, off_times = gil.extract_on_off(
         times, states, promoter_idx, active_window[0], active_window[1]
     )
@@ -45,6 +45,16 @@ def summarise(times, states, promoter_idx, mrna_idx, active_window):
 
 
 def plot(times, states, name, promoter_idx, mrna_idx, out_dir):
+    """Plots one simulated trajectory and writes it to disk.
+
+    Args:
+        times: Reaction times returned by the simulator.
+        states: State after each reaction.
+        name: Model name, used in the title and filename.
+        promoter_idx: Column holding the promoter state.
+        mrna_idx: Column holding the mRNA count.
+        out_dir: Directory to write the figure into.
+    """
     use_paper_style()
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 9))
 
@@ -77,6 +87,7 @@ def plot(times, states, name, promoter_idx, mrna_idx, out_dir):
 
 
 def main():
+    """Parses arguments and runs one SSA simulation."""
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--model", choices=sorted(MODELS), default="heterodimer")

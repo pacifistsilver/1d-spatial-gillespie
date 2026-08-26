@@ -1,3 +1,9 @@
+"""Mean first-passage time out of the bound states, across the rate plane.
+
+One row varies a single rate at a time; the other sweeps the full plane,
+marking the rates implied by single-molecule tracking.
+"""
+
 import os
 
 import numpy as np
@@ -14,8 +20,10 @@ use_paper_style(sans_serif="Arial")
 BS, BN = 0.06, 0.24         # fixed unbinding rates
 AS0, AN0 = 0.5, 0.2      # reference binding rates
 
-SHOW_FIXED = True            # annotate the parameters held constant in each panel
-SHOW_FLAT = True             # annotate axes along which tau_ON is exactly constant
+#: Annotate the parameters held constant in each panel.
+SHOW_FIXED = True
+#: Annotate axes along which tau_ON is exactly constant.
+SHOW_FLAT = True
 ROW_LABELS = ("HD", "M")   
 
 N = 400
@@ -35,6 +43,25 @@ def field(Z, shape):
 
 
 def panel(ax, Z, X, Y, xsym, ysym, mark, fixed, lo, hi, levels, tag):
+    """Draws one MFPT panel and returns its mesh for the shared colour bar.
+
+    Args:
+        ax: Axes to draw on.
+        Z: tau_ON values to shade.
+        X: First rate axis.
+        Y: Second rate axis.
+        xsym: Label for the first axis.
+        ysym: Label for the second axis.
+        mark: Point to mark, or None.
+        fixed: Parameters held constant, annotated when SHOW_FIXED.
+        lo: Lower colour limit.
+        hi: Upper colour limit.
+        levels: Contour levels to draw.
+        tag: Panel tag, drawn in the corner.
+
+    Returns:
+        The pcolormesh, so the caller can attach one shared colour bar.
+    """
     pcm = ax.pcolormesh(X, Y, Z, norm=LogNorm(vmin=lo, vmax=hi),
                         cmap="magma", shading="auto", rasterized=True)
 

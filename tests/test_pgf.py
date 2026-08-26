@@ -68,7 +68,7 @@ def test_pgf_closed_form_refuses_gates_that_do_not_separate():
 
 
 def test_pgf_fft_refuses_when_hyp1f1_is_unreliable():
-    """Rather than returning quietly wrong numbers, or NaN at k_y/gamma ~ 500."""
+    """Rather than quietly wrong numbers, or NaN at k_y/gamma ~ 500."""
     with pytest.raises(ValueError, match="exceeds"):
         pgf.stationary_pmf(*PARAMS, 250.0, 1.0, "ADD", y_max=800, method="pgf")
 

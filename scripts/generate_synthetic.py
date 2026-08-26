@@ -1,4 +1,4 @@
-"""Generate synthetic count data from known parameters, for inference validation.
+"""Generate synthetic count data from known parameters, to validate inference.
 
 Simulating from a known ground truth and re-fitting it is how the inference is
 checked: the posterior should cover ``TRUE_PARAMS``.
@@ -65,7 +65,18 @@ def truth_for(model):
 
 
 def generate_ssa(model, n_cells, t_max):
-    """The original Gillespie route; see the module docstring for its caveats."""
+    """Simulates by the original Gillespie route.
+
+    See the module docstring for the caveats that apply to it.
+
+    Args:
+        model: Promoter model to simulate.
+        n_cells: Number of cells to draw.
+        t_max: Simulation time per cell.
+
+    Returns:
+        Simulated counts, one per cell.
+    """
     if model not in SSA_SIMULATORS:
         raise SystemExit(f"--method ssa has no simulator for model {model!r}")
     simulator = SSA_SIMULATORS[model]
@@ -78,6 +89,7 @@ def generate_ssa(model, n_cells, t_max):
 
 
 def main():
+    """Parses arguments and writes the synthetic count datasets."""
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--model", choices=sorted(GATES), default="heterodimer")

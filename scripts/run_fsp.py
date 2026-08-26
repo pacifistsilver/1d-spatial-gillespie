@@ -43,7 +43,7 @@ EPSILON = 1.0e-2
 
 
 def run_burr08(expander_kind):
-    """The burr08 model, which is initially stiff so it starts with finer steps."""
+    """Solves burr08, which is stiff at first and so starts with fine steps."""
     model = burr08.create_model()
     initial_states = stochtf.cme.domain.from_iter((model.initial_state,))
 
@@ -89,6 +89,7 @@ def run_burr08(expander_kind):
 
 
 def main():
+    """Parses arguments and solves the selected network by FSP."""
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("model", choices=["burr08", "heterodimer", "homodimer"],

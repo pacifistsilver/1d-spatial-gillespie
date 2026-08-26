@@ -1,12 +1,11 @@
-"""
-common utility functions for the fsp example scripts
-"""
+"""Shared plotting helpers for the FSP example drivers."""
 
 def plot_solution_and_domain(measurement, domains):
-    """
-    displays plots of the solution and the domain at various times
-    
-    used by the three three fsp example scripts
+    """Plots the solution and the domain at a sequence of times.
+
+    Args:
+        recorder: Recorder holding the solution at each stored time.
+        domain_states: Domain states stored alongside each solution.
     """
     import pylab
     # plot the solution
@@ -33,10 +32,13 @@ def plot_solution_and_domain(measurement, domains):
     pylab.show()
 
 def plot_solution_and_domain_5d(measurement, domains, dim1=4, dim2=3, shape=(80, 2)):
-    """
-    displays plots of the solution and the domain at various times for a 5D model
-    dim1 and dim2 are the indices of the dimensions to plot in the scatter plot.
-    If dim1 or dim2 is a tuple, the dimensions will be summed.
+    """Plots the solution and domain of a 5-D model, projected to two axes.
+
+    Args:
+        recorder: Recorder holding the solution at each stored time.
+        domain_states: Domain states stored alongside each solution.
+        dim1: Index of the first plotted dimension. A tuple is summed over.
+        dim2: Index of the second plotted dimension. A tuple is summed over.
     """
     import pylab
     import math

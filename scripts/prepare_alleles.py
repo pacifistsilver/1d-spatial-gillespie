@@ -73,6 +73,14 @@ def locate(filename):
 
 
 def read_allele_table(path):
+    """Reads one allele count table.
+
+    Args:
+        path: Path to the GEO allele-specific count table.
+
+    Returns:
+        The table as a dataframe, indexed by transcript.
+    """
     """(transcript ids, cell names, counts) from one allele table.
 
     The header is read by hand because it is one field short of every data
@@ -129,6 +137,7 @@ def collapse_to_genes(transcripts, counts, mapping):
 
 
 def main():
+    """Parses arguments and builds the combined allele table."""
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)

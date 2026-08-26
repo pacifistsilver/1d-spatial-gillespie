@@ -30,6 +30,7 @@ from stochtf.inference.models import FIXED_BETA_N, FIXED_BETA_S
 
 
 def main():
+    """Parses arguments and prints the panel rate table."""
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)

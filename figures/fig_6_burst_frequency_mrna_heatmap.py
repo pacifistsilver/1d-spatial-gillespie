@@ -1,4 +1,4 @@
-"""Fig 10: the burst plane by FSP -- mean mRNA over (burst frequency, burst size).
+"""The burst plane by FSP: mean mRNA over (burst frequency, burst size).
 
 The pair (f, b) is the natural coordinate system of the bursty limit, where
 P(y) -> NB(f/gamma, b/(1+b)) and <y> = b f / gamma.  That identity is only
@@ -56,6 +56,16 @@ def fsp_stationary(k_on, k_off, k_y, gamma, ymax):
     Production out of y = ymax is switched off, so the truncation is reflecting
     and probability is conserved.  Verified against a full sparse-LU FSP to
     2e-16 and against NB(f/gamma, b) in the bursty limit.
+
+    Args:
+        k_on: Promoter activation rate.
+        k_off: Promoter deactivation rate.
+        k_y: Transcription rate in the active state.
+        gamma: mRNA degradation rate.
+        ymax: Count grid bound.
+
+    Returns:
+        The stationary distribution over counts 0..ymax.
     """
     n = ymax + 1
     r0 = np.zeros(n)
@@ -92,6 +102,17 @@ def fsp_moments(k_on, k_off, k_y, gamma=1.0, tol=1e-9, grow=6):
     <y> = k_y <sigma>/gamma needs no truncation, so the gap between it and the
     FSP sum measures directly how much of the distribution the projection is
     missing.  ymax is doubled until that gap falls below tol.
+
+    Args:
+        k_on: Promoter activation rate.
+        k_off: Promoter deactivation rate.
+        k_y: Transcription rate in the active state.
+        gamma: mRNA degradation rate.
+        tol: Largest acceptable gap against the exact mean.
+        grow: Factor by which ymax is grown each round.
+
+    Returns:
+        A tuple (mean, variance).
     """
     exact = k_y * k_on / ((k_on + k_off) * gamma)
     ymax = auto_ymax(k_on, k_off, k_y, gamma)
@@ -135,7 +156,8 @@ def sweep(hold):
 
 
 # two-site OR promoter tracks, for orientation (bug-free closed forms:
-# f = q_s q_n (alpha_s + alpha_n),  b = k_y (1 - q_s q_n)/(q_s q_n (alpha_s+alpha_n)))
+# f = q_s q_n (alpha_s + alpha_n)
+# b = k_y (1 - q_s q_n) / (q_s q_n (alpha_s + alpha_n))
 def or_track(bs, bn, k_y=K_Y, n=400):
     al = np.logspace(-3, 3, n)
     r = (bs / (al + bs)) * (bn / (al + bn))

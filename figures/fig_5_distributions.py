@@ -1,3 +1,5 @@
+"""Stationary count distributions for the two promoter topologies."""
+
 import os
 import numpy as np
 import matplotlib as mpl
@@ -36,6 +38,13 @@ def stats(P):
     return mean, var/mean, np.sqrt(var)/mean
 
 def heat(a, Z, title, cmap, norm, cb_label, levels=None):
+    """Draws one shaded panel with contours and a colour bar.
+
+    Args:
+        a: Axes to draw on.
+        Z: Values to shade.
+        title: Panel title.
+    """
     # Using global X, Y as in original script
     im = a.pcolormesh(X, Y, Z, cmap=cmap, norm=norm,
                       shading="auto", rasterized=True)
@@ -61,7 +70,7 @@ for i in range(X.shape[0]):
         Ph, Pm, _, _ = both_models(build(X[i, j], Y[i, j]))
         TV[i, j] = 0.5 * np.abs(Ph - Pm).sum()
 
-# 2. Define four points corresponding to decreasing total variation (moving bottom-left to top-right)
+# 2. Four points of decreasing total variation, bottom-left to top-right.
 dist_pts = [
     (0.01, 0.01),   # High TV (bursty regime)
     (0.1, 0.4),     # Moderate-High TV

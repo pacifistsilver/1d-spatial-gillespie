@@ -29,6 +29,9 @@ def test_stoichiometry_rows_match_state_width(name):
     The transcription reaction uses ``gillespie.burst_stoichiometry``, a callable
     row that draws a geometric burst size at each firing, so it is checked by
     calling it rather than by length.
+
+    Args:
+        name: Promoter model under test.
     """
     params, initial_state, stoichiometry, _, _, _ = MODELS[name]
     for i, row in enumerate(stoichiometry):
@@ -54,6 +57,11 @@ def test_propensities_are_non_negative_at_the_initial_state(name):
 
 @pytest.mark.parametrize("name", sorted(MODELS))
 def test_simulation_runs_and_stays_non_negative(name):
+    """Checks that a run completes with no negative copy numbers.
+
+    Args:
+        name: Promoter model under test.
+    """
     params, initial_state, stoichiometry, propensity_fn, _, mrna_idx = MODELS[name]
     times, states = gil.gillespie(
         initial_state, stoichiometry, propensity_fn,
@@ -68,7 +76,7 @@ def test_simulation_runs_and_stays_non_negative(name):
 
 @pytest.mark.parametrize("name", sorted(MODELS))
 def test_promoter_occupancy_is_conserved(name):
-    """The promoter compartments partition one gene copy, so they sum to a constant."""
+    """The promoter compartments partition one copy, so they sum to 1."""
     params, initial_state, stoichiometry, propensity_fn, promoter_idx, _ = MODELS[name]
     if name == "monomer":
         pytest.skip("monomer tracks free/bound TF pools, not promoter compartments")

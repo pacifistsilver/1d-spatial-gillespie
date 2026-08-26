@@ -84,6 +84,15 @@ def label_offset(i, f, b, k=6):
     The panel is crowded in the middle, so a fixed offset stacks names on top
     of each other. Distances are taken in log space, which is the space the
     axes are drawn in.
+
+    Args:
+        i: Index of the gene being labelled.
+        f: Burst frequencies of every gene.
+        b: Burst sizes of every gene.
+        k: Number of neighbours to steer clear of.
+
+    Returns:
+        The (dx, dy) offset for the label.
     """
     x, y = np.log10(f), np.log10(b)
     d = np.hypot(x - x[i], y - y[i])
@@ -98,6 +107,7 @@ def label_offset(i, f, b, k=6):
 
 
 def main():
+    """Builds the burst-plane panel figure and writes it out."""
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
