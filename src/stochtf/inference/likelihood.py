@@ -1,34 +1,36 @@
 """Exact log-likelihood of observed counts under the promoter models.
 
-This replaces the ABC layer. Previously inference compared a Gillespie
-simulation against the data through ``summary_stat``, which reduced both to
-``[mean, fano]`` -- two numbers -- and accepted parameters within an epsilon
-ball of that. Everything else about the distribution was discarded, and the
-simulator itself was noisy, so the ABC posterior mixed genuine parameter
-uncertainty with Monte Carlo error.
-
-The stationary distribution is available exactly (see
-:mod:`stochtf.analytical.pgf`), so the likelihood of iid counts is just
+The stationary distribution is available in closed form from
+:mod:`stochtf.analytical.pgf`, so for iid counts the log-likelihood is
 
     log L(theta) = sum_i log P(y_i | theta)
 
-evaluated on the whole distribution, deterministically. There is no tolerance
-to tune and no simulation noise, and the sampler targets the true posterior
-rather than an ABC approximation to it.
+evaluated deterministically over the whole distribution. There is no ABC
+tolerance to tune and no simulation noise, so the sampler targets the true
+posterior.
 """
 
 import numpy as np
 
 from stochtf.analytical import pgf
 
-#: Counts below this are treated as numerically zero probability. The floor
-#: keeps a single unlucky observation from sending the whole log-likelihood to
-#: -inf and stalling the sampler.
+#: Probability floor. Keeps one unlucky observation from sending the whole
+#: log-likelihood to -inf and stalling the sampler.
 MIN_PROB = 1e-300
 
 
 def prepare_counts(counts):
-    """Validate observed counts and return them as a non-negative integer array."""
+    """Validates observed counts and returns them as integers.
+
+    Args:
+        counts: Molecule numbers, one per cell. Flattened if not already 1-D.
+
+    Returns:
+        A 1-D int64 array of non-negative counts.
+
+    Raises:
+        ValueError: If counts are non-finite, non-integer, or negative.
+    """
     y = np.asarray(counts)
     if y.ndim > 1:
         y = y.ravel()
@@ -44,13 +46,24 @@ def prepare_counts(counts):
 
 def log_likelihood(counts, a_s, b_s, a_n, b_n, k_y, gamma, model="dimer",
                    y_max=None):
-    """Exact log-likelihood of iid stationary counts.
+    """Computes the exact log-likelihood of iid stationary counts.
 
-    ``counts`` are molecule numbers, one per cell. ``model`` selects the
-    promoter logic via :data:`stochtf.analytical.pgf.MODEL_GATE`.
+    Args:
+        counts: Molecule numbers, one per cell.
+        a_s: SOX2 binding rate.
+        b_s: SOX2 unbinding rate.
+        a_n: NANOG binding rate.
+        b_n: NANOG unbinding rate.
+        k_y: Transcription rate in the active states.
+        gamma: mRNA degradation rate.
+        model: Promoter logic, selected via
+          :data:`stochtf.analytical.pgf.MODEL_GATE`.
+        y_max: Count grid bound. Chosen from the first two moments if None.
 
-    Returns ``-inf`` for parameters that are out of the model's support rather
-    than raising, so a sampler can simply reject them.
+    Returns:
+        The log-likelihood, or -inf for parameters outside the model's support.
+        Out-of-support parameters return rather than raise so that a sampler can
+        simply reject them.
     """
     y = prepare_counts(counts)
 
@@ -80,16 +93,22 @@ def log_likelihood(counts, a_s, b_s, a_n, b_n, k_y, gamma, model="dimer",
 
 
 def log_likelihood_factory(counts, model="dimer", k_y=None, gamma=None):
-    """Build ``f(a_s, a_n, b_s, b_n, ...) -> float`` bound to fixed data.
+    """Builds a log-likelihood function bound to fixed data.
 
-    The argument order matches the priors declared in
-    :mod:`stochtf.inference.models` (alpha_s, alpha_n, beta_s, beta_n), which is
-    *not* the order :func:`log_likelihood` takes -- the mismatch is handled here
-    once rather than at every call site.
+    The returned function takes its rates in prior-declaration order
+    (alpha_s, alpha_n, beta_s, beta_n), which differs from the order
+    :func:`log_likelihood` takes. Reordering happens here rather than at every
+    call site.
 
-    ``k_y`` and ``gamma`` may be pinned here, in which case the returned
-    function takes four arguments; leave them None to infer them too, and the
-    returned function takes six.
+    Args:
+        counts: Molecule numbers, one per cell.
+        model: Promoter logic to score against.
+        k_y: Transcription rate to pin. Inferred if None.
+        gamma: mRNA degradation rate to pin. Inferred if None.
+
+    Returns:
+        A callable taking four rates when k_y and gamma are both pinned, and six
+        otherwise. Its arity is also exposed as the ``n_params`` attribute.
     """
     y = prepare_counts(counts)
     fixed = k_y is not None and gamma is not None

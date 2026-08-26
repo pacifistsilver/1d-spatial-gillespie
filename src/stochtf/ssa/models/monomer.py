@@ -15,6 +15,15 @@ MRNA_IDX = 4
 
 
 def propensity_fn(state, p_params):
+    """Returns the reaction propensities for the one contested site model.
+
+    Args:
+        state: Current copy number of each species.
+        p_params: Rate constants, keyed by name.
+
+    Returns:
+        One propensity per reaction, ordered as in the stoichiometry.
+    """
     nf, sf, nb, sb, y = state
     alpha_s = p_params["alpha_s"]
     beta_s = p_params["beta_s"]

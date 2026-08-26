@@ -1,117 +1,60 @@
 """Bayesian models for the monomer and heterodimer promoters.
 
-Both are sampled with ``pm.sample_smc``. They differ in how a proposal is
-scored, selected by ``model_config["method"]``:
-
-``exact`` (default)
-    The stationary distribution P(y | theta) is computed numerically by finite
-    state projection (:mod:`stochtf.cme.stationary`) and the counts are scored
-    against the whole of it. There is no tolerance to tune and no simulation
-    noise, so the sampler targets the true posterior.
-
-``abc``
-    The likelihood-free route: counts are simulated and compared to the data
-    through a discrepancy, using ``pm.Simulator``, which with ``sample_smc``
-    is ABC-SMC. Kept because it needs only a forward simulator, so it still
-    applies to variants the projection cannot reach -- and because agreement
-    between the two is a good check on both.
-
-Projection replaced simulation as the default because it is both exact and,
-at these state-space sizes, no more expensive: the promoter has three or four
-states and the count grid is a few hundred wide, so one solve costs a few
-milliseconds -- about what simulating a dataset costs, but without the noise
-that forces epsilon to stay wide.
-
-The two promoters
------------------
-Both are small continuous-time chains driving one birth-death mRNA species, and
-both are parameterised the same way -- (alpha_s, beta_s) for SOX2, (alpha_n,
+Both promoters are small continuous-time chains driving one birth-death mRNA
+species, parameterised identically -- (alpha_s, beta_s) for SOX2, (alpha_n,
 beta_n) for NANOG, k_y for transcription -- so their fits are comparable. They
 differ only in topology, which is the hypothesis under test:
 
-``heterodimer``
-    Two independent sites, states (sigma_s, sigma_n) in {0,1}^2 ordered 00, 10,
-    01, 11 as in :mod:`stochtf.analytical.heterodimer`. Site s flips 0->1 at
-    alpha_s and 1->0 at beta_s, site n likewise, and mRNA is made at k_y
-    whenever *at least one* site is bound.
+  heterodimer: Two independent sites, states (sigma_s, sigma_n) in {0,1}^2
+    ordered 00, 10, 01, 11. mRNA is made at k_y whenever at least one site is
+    bound.
+  monomer: One site the two factors compete for, S <- 0 -> N. Binding is
+    exclusive, so there is no doubly bound state, and mRNA is made at k_y
+    whenever the site is occupied.
 
-``monomer``
-    One site the two factors compete for, S <- 0 -> N: binding is exclusive, so
-    the states are empty / SOX2-bound / NANOG-bound and there is no doubly
-    bound state. mRNA is made at k_y whenever the site is occupied, which is
-    the ``k_y (n_b + s_b)`` emission of :mod:`stochtf.analytical.monomer` --
-    the two terms cannot both be one here.
+Both are sampled with ``pm.sample_smc``. ``model_config["method"]`` selects how
+a proposal is scored:
 
-The simulator (ABC method only)
--------------------------------
-Conditional on the promoter path sigma(t), transcription is an inhomogeneous
-Poisson process and each mRNA survives to the observation time with probability
-exp(-gamma * age), so the stationary count is exactly
+  exact (default): The stationary distribution is computed by finite state
+    projection (:mod:`stochtf.cme.stationary`) and the counts are scored
+    against the whole of it. No tolerance to tune and no simulation noise, so
+    the sampler targets the true posterior. At these state-space sizes -- three
+    or four promoter states, a count grid a few hundred wide -- one solve costs
+    a few milliseconds.
+  abc: Counts are simulated and compared to the data through a discrepancy via
+    ``pm.Simulator``, which under ``sample_smc`` is ABC-SMC. Needs only a
+    forward simulator, so it reaches variants the projection cannot, and
+    agreement between the two routes checks both. The discrepancy defaults to
+    the sorted count vector under a Gaussian kernel, i.e. the 1-D 2-Wasserstein
+    distance, with ``epsilon`` a tolerance in molecules defaulting to a quarter
+    of the observed standard deviation. The ABC posterior stays broader than
+    the true posterior by an amount set by epsilon and simulator noise.
 
-    y | sigma ~ Poisson( k_y * integral_0^inf act(sigma(s)) exp(-gamma s) ds )
+Under the ABC method only, the simulator exploits the fact that conditional on
+the promoter path sigma(t) the stationary count is exactly
 
-with s the age (time before observation). Only the promoter needs simulating;
-the mRNA layer is integrated out. Both chains are reversible -- one is a pair
-of two-state chains, the other a star -- so the time-reversed promoter has the
-same law as the forward one, and starting each cell from the stationary
-occupancy then running forward in age samples the true stationary distribution.
-Between switches the activity is constant and the kernel integrates in closed
-form, so one iteration per promoter switch is all it costs.
+    y | sigma ~ Poisson(k_y * integral_0^inf act(sigma(s)) exp(-gamma s) ds)
 
-That matters for three reasons, all of which the previous ABC layer got wrong:
+with s the age before observation. Only the promoter needs simulating; the mRNA
+layer is integrated out. Both chains are reversible, so starting each cell from
+the stationary occupancy and running forward in age samples the true stationary
+distribution, one iteration per promoter switch.
 
-Stationarity
-    The old simulator started every cell empty at t = 0 and recorded 10 counts
-    along *one* trajectory at t_max/10 ... t_max. Those draws are correlated
-    with each other and, at the settings used, not yet stationary -- the first
-    was taken half an mRNA lifetime in. Here every draw is an independent
-    stationary sample and there is no burn-in to choose.
+Identifiability:
+  Stationary counts determine rates only relative to the mRNA degradation rate,
+  so gamma is fixed at 1 and the time unit is one mRNA lifetime. They also
+  cannot determine four switching rates at once, so the off-rates are pinned by
+  default to the pair single-molecule tracking measures directly
+  (beta_s = 0.04, beta_n = 0.26), leaving alpha_s, alpha_n and k_y free.
+  Clearing ``beta_s_fixed``/``beta_n_fixed`` in ``model_config`` infers them
+  instead, at the cost of posteriors that are mostly prior. Pinning them also
+  breaks the factor-exchange symmetry that would otherwise leave the marginals
+  ambiguous. See :mod:`stochtf.inference.identifiability`.
 
-Cost
-    A full Gillespie run fires ~2 * mean * horizon reactions per cell; at
-    esrrb's mean of 251 over 15 lifetimes that is ~7500 reactions. Simulating
-    only the promoter costs a handful of iterations per cell in the bursty
-    regime, which is what makes ABC over ~10^5 proposals feasible.
-
-Transcription rate
-    ``k_y`` and ``gamma_y`` used to be *default arguments* of the simulator
-    that ``pm.Simulator`` never overrode, pinning k_y/gamma at 2 and capping
-    the model mean at 2 against observed means of 30-250. k_y is now inferred.
-
-Identifiability
----------------
-Stationary counts determine only the rates *relative to* the mRNA degradation
-rate, so gamma is fixed at 1: the time unit is one mRNA lifetime and every
-other rate is inferred in those units.
-
-They also cannot determine four switching rates at once, so the two off-rates
-are pinned by default -- beta_s = 0.04 and beta_n = 0.26, the pair
-single-molecule tracking measures directly -- leaving alpha_s, alpha_n and k_y
-free. Clearing ``beta_s_fixed``/``beta_n_fixed`` in ``model_config`` restores
-them as inferred parameters, at the cost of posteriors that are mostly prior.
-
-Pinning the off-rates also breaks the factor-exchange symmetry that would
-otherwise make the marginals ambiguous: with beta_s != beta_n the two sites are
-no longer interchangeable, so alpha_s and alpha_n mean what their names say.
-See :mod:`stochtf.inference.identifiability` for what is and is not determined.
-
-Discrepancy (ABC method only)
------------------------------
-The default is the sorted count vector under a Gaussian kernel, i.e. the 1D
-2-Wasserstein distance between the empirical distributions. It uses the whole
-distribution rather than the two-number ``[mean, fano]`` summary the old
-version accepted on, so far less information is thrown away. ``epsilon`` is a
-tolerance in molecules and defaults to a quarter of the observed standard
-deviation, which scales across genes; the old hard-coded ``epsilon = 2.0`` did
-not. The ABC posterior remains broader than the true posterior by an amount set
-by epsilon and by simulator noise -- which is the reason the exact method is
-the default.
-
-Note that :mod:`stochtf.inference.likelihood` computes the same quantity for
-the *independent-site* gates via ``stochtf.analytical.pgf``. That route cannot
-express the exclusive monomer, whose promoter is not a product of two
-two-state sites, which is why :func:`log_likelihood` here goes through the
-projection instead.
+:mod:`stochtf.inference.likelihood` computes the same quantity for the
+independent-site gates via ``stochtf.analytical.pgf``. That route cannot
+express the exclusive monomer, whose promoter is not a product of two two-state
+sites, which is why the scoring here goes through the projection instead.
 """
 
 import json
@@ -138,12 +81,11 @@ GAMMA = 1.0
 #: Carlo noise of the simulation itself.
 KERNEL_HORIZON = 15.0
 
-#: Promoter switches per cell before the rest of the kernel is closed off with
-#: the occupancy-averaged activity. Reachable only when switching is more than
-#: ~25x faster than degradation, and that is exactly the regime where the
-#: promoter self-averages, so what the closure discards is a fluctuation the
-#: data could not resolve anyway. Without it one absurd prior draw could stall
-#: a whole SMC stage.
+#: Promoter switches per cell before the kernel is closed off with the
+#: occupancy-averaged activity. Only reachable when switching is ~25x faster
+#: than degradation, where the promoter self-averages and the discarded
+#: fluctuation is below what the data resolve. Caps the cost of a wild prior
+#: draw, which could otherwise stall a whole SMC stage.
 MAX_SWITCHES = 400
 
 #: Default ABC tolerance as a fraction of the observed standard deviation.
@@ -152,22 +94,20 @@ EPSILON_SCALE = 0.25
 #: Floor on epsilon, so degenerate data cannot produce a zero-width kernel.
 MIN_EPSILON = 1e-3
 
-#: Off-rates held fixed rather than inferred, in units of gamma. Stationary
-#: counts cannot determine four switching rates at once (see
+#: Off-rates pinned rather than inferred, in units of gamma. Stationary counts
+#: cannot determine four switching rates at once (see
 #: :mod:`stochtf.inference.identifiability`), so pinning the two dissociation
-#: rates -- the pair that single-molecule tracking measures directly -- leaves
-#: the on-rates and k_y to be estimated from a problem the data can support.
-#: Set either to None in ``model_config`` to infer it with its log-normal prior
-#: instead.
+#: rates -- the pair single-molecule tracking measures directly -- leaves the
+#: on-rates and k_y identifiable. Set either to None in ``model_config`` to
+#: infer it instead.
 FIXED_BETA_S = constants.BETA_S
 FIXED_BETA_N = constants.BETA_N
 
-#: Log-normal priors, in units of gamma. Switching rates are centred on 1 (one
-#: event per mRNA lifetime) and spread over four orders of magnitude either
-#: side, covering both the bursty regime the observed Fano factors imply and
-#: the fast-switching limit. k_y is centred on 20, the order needed to reach
-#: the observed means of 30-250. The beta priors apply only when the
-#: corresponding ``*_fixed`` entry is cleared.
+#: Log-normal priors, in units of gamma. Switching rates centre on 1 (one
+#: event per mRNA lifetime), spread four orders of magnitude either side to
+#: cover both the bursty and fast-switching regimes. k_y centres on 20, the
+#: order needed for the observed means of 30-250. The beta priors apply only
+#: when the matching ``*_fixed`` entry is cleared.
 DEFAULT_MODEL_CONFIG: Dict = {
     "alpha_s_mu": -1.0, "alpha_s_sigma": 2.0,
     "alpha_n_mu": -2.0, "alpha_n_sigma": 2.0,
@@ -178,8 +118,7 @@ DEFAULT_MODEL_CONFIG: Dict = {
     "beta_s_fixed": FIXED_BETA_S,
     "beta_n_fixed": FIXED_BETA_N,
     # "exact" scores the whole distribution from the finite state projection;
-    # "abc" falls back to simulating counts and comparing them through the
-    # epsilon kernel below. Both are sampled with pm.sample_smc.
+    # "abc" simulates counts and compares them through the epsilon kernel.
     "method": "exact",
     # ABC kernel. epsilon=None resolves to epsilon_scale * std(observed) at
     # build time and is written back here, so the value used is recorded.
@@ -209,10 +148,21 @@ DEFAULT_SAMPLER_CONFIG: Dict = {
 #   pi       -- stationary distribution over states
 
 def heterodimer_chain(a_s, b_s, a_n, b_n):
-    """Two independent sites; mRNA whenever either is bound (states 10/01/11).
+    """Builds the jump chain for two independent binding sites.
 
-    State order 00, 10, 01, 11 matches :func:`stochtf.analytical.pgf.promoter_generator`,
-    so the two can be compared directly.
+    mRNA is made whenever either site is bound (states 10, 01, 11). State order
+    00, 10, 01, 11 matches
+    :func:`stochtf.analytical.pgf.promoter_generator`, so the two are directly
+    comparable.
+
+    Args:
+        a_s: SOX2 binding rate.
+        b_s: SOX2 unbinding rate.
+        a_n: NANOG binding rate.
+        b_n: NANOG unbinding rate.
+
+    Returns:
+        A tuple (starts, targets, rates, act, pi) in flat jump-chain form.
     """
     starts = np.array([0, 2, 4, 6, 8], dtype=np.int64)
     targets = np.array([1, 2,   0, 3,   0, 3,   1, 2], dtype=np.int64)
@@ -227,11 +177,21 @@ def heterodimer_chain(a_s, b_s, a_n, b_n):
 
 
 def monomer_chain(a_s, b_s, a_n, b_n):
-    """One site, exclusive occupancy: S <- 0 -> N, no doubly bound state.
+    """Builds the jump chain for one contested binding site.
 
-    States are empty, SOX2-bound, NANOG-bound; mRNA is made whenever the site
+    Occupancy is exclusive (S <- 0 -> N), so the states are empty, SOX2-bound
+    and NANOG-bound, with no doubly bound state. mRNA is made whenever the site
     is occupied. Detailed balance on this star gives pi proportional to
     (1, a_s/b_s, a_n/b_n).
+
+    Args:
+        a_s: SOX2 binding rate.
+        b_s: SOX2 unbinding rate.
+        a_n: NANOG binding rate.
+        b_n: NANOG unbinding rate.
+
+    Returns:
+        A tuple (starts, targets, rates, act, pi) in flat jump-chain form.
     """
     starts = np.array([0, 2, 3, 4], dtype=np.int64)
     targets = np.array([1, 2,   0,   0], dtype=np.int64)
@@ -253,18 +213,33 @@ PROMOTERS = {"monomer": monomer_chain, "heterodimer": heterodimer_chain}
 
 @njit(cache=True)
 def _seed_numba(seed):
-    """Seed numba's own generator, which is separate from NumPy's."""
+    """Seeds numba's generator, which is separate from NumPy's."""
     np.random.seed(seed)
 
 
 @njit(cache=True)
 def _simulate_counts(starts, targets, rates, act, pi, k_y, gamma, n_cells,
                      horizon, max_switches):
-    """``n_cells`` independent stationary counts from a promoter jump chain.
+    """Draws independent stationary counts from a promoter jump chain.
 
     Each cell draws its promoter state from ``pi``, walks the chain forward in
     age, accumulates the kernel-weighted activity in closed form between
     switches, and draws one Poisson count from the total.
+
+    Args:
+        starts: Offsets into ``targets``/``rates``, one per state plus a bound.
+        targets: Destination state of each jump.
+        rates: Rate of each jump.
+        act: Per-state transcription activity.
+        pi: Stationary promoter occupancy.
+        k_y: Transcription rate in the active states.
+        gamma: mRNA degradation rate.
+        n_cells: Number of independent counts to draw.
+        horizon: Age horizon, in mRNA lifetimes.
+        max_switches: Cap on promoter switches per cell.
+
+    Returns:
+        An array of ``n_cells`` stationary counts.
     """
     n_states = act.size
 
@@ -300,7 +275,8 @@ def _simulate_counts(starts, targets, rates, act, pi, k_y, gamma, n_cells,
                 next_age = horizon
             else:
                 next_age = age - np.log(np.random.random()) / rate
-                if not (next_age < horizon):  # also catches the log(0) = -inf draw
+                # Also catches the log(0) = -inf draw.
+                if not (next_age < horizon):
                     next_age = horizon
 
             next_decay = np.exp(-gamma * next_age)
@@ -335,18 +311,25 @@ def _simulate_counts(starts, targets, rates, act, pi, k_y, gamma, n_cells,
 
 
 def _n_from_size(size):
-    """Number of cells ``pm.Simulator`` is asking for."""
+    """Returns the number of cells ``pm.Simulator`` is asking for."""
     if size is None:
         return 1
     return int(np.prod(np.atleast_1d(size)))
 
 
 def _seed_from(rng):
-    """Take a seed from PyMC's generator so simulations are reproducible.
+    """Takes a seed from PyMC's generator so simulations are reproducible.
 
-    The kernel is numba-compiled and uses numba's own global generator, which
-    a NumPy ``Generator`` cannot drive directly; reseeding it per call is what
-    ties the two together.
+    The kernel is numba-compiled and uses numba's own global generator, which a
+    NumPy ``Generator`` cannot drive directly. Reseeding it per call ties the
+    two together.
+
+    Args:
+        rng: A NumPy ``Generator``, or None to draw from NumPy's global
+          generator instead.
+
+    Returns:
+        A non-negative int seed for the numba kernel.
     """
     if rng is None:
         return int(np.random.randint(0, 2**31 - 1))
@@ -357,13 +340,25 @@ def _seed_from(rng):
 
 def simulate_counts(rng, alpha_s, alpha_n, beta_s, beta_n, k_y,
                     promoter="heterodimer", size=None, gamma=GAMMA):
-    """Stationary counts under one of the promoters, one draw per cell.
+    """Draws stationary counts under one promoter, one draw per cell.
 
     Argument order follows the priors declared below (alpha_s, alpha_n, beta_s,
-    beta_n), which is *not* the order the analytical routines take.
+    beta_n), which is not the order the analytical routines take.
 
-    Parameters outside the model's support give an all-zero sample rather than
-    an exception, so the sampler simply scores them as a bad fit.
+    Args:
+        rng: NumPy ``Generator`` used to seed the numba kernel.
+        promoter: Key into :data:`PROMOTERS`.
+        alpha_s: SOX2 binding rate.
+        alpha_n: NANOG binding rate.
+        beta_s: SOX2 unbinding rate.
+        beta_n: NANOG unbinding rate.
+        k_y: Transcription rate in the active states.
+        size: Number of cells requested by ``pm.Simulator``.
+
+    Returns:
+        Stationary counts, one per cell. Parameters outside the model's support
+        give an all-zero sample rather than an exception, so the sampler scores
+        them as a bad fit.
     """
     a_s, a_n = float(np.asarray(alpha_s).item()), float(np.asarray(alpha_n).item())
     b_s, b_n = float(np.asarray(beta_s).item()), float(np.asarray(beta_n).item())
@@ -415,15 +410,25 @@ def chain_generator(promoter, a_s, b_s, a_n, b_n):
 
 def log_likelihood(counts, alpha_s, alpha_n, beta_s, beta_n, k_y,
                    promoter="heterodimer", gamma=GAMMA):
-    """Exact log-likelihood of iid stationary counts, by finite state projection.
+    """Computes the exact log-likelihood by finite state projection.
 
-    Once :mod:`stochtf.cme.stationary` can produce P(y | theta) numerically for
-    either topology, the whole distribution can be scored directly and there is
-    no tolerance to tune and no simulation noise -- the sampler targets the true
-    posterior rather than an ABC approximation to it.
+    :mod:`stochtf.cme.stationary` gives P(y | theta) numerically for either
+    topology, so the whole distribution is scored directly. There is no
+    tolerance to tune and no simulation noise.
 
-    Returns ``-inf`` for parameters outside the model's support rather than
-    raising, so a sampler can simply reject them.
+    Args:
+        counts: Molecule numbers, one per cell.
+        promoter: Key into :data:`PROMOTERS`.
+        alpha_s: SOX2 binding rate.
+        alpha_n: NANOG binding rate.
+        beta_s: SOX2 unbinding rate.
+        beta_n: NANOG unbinding rate.
+        k_y: Transcription rate in the active states.
+
+    Returns:
+        The log-likelihood, or -inf for parameters outside the model's support.
+        Out-of-support parameters return rather than raise so that a sampler can
+        simply reject them.
     """
     y = prepare_counts(counts)
     rates = (alpha_s, alpha_n, beta_s, beta_n, k_y, gamma)
@@ -495,10 +500,10 @@ class StationaryLogLike(Op):
 
 
 class JointStationaryLogLike(Op):
-    """:class:`StationaryLogLike` with the topology chosen by an extra input.
+    """A :class:`StationaryLogLike` whose topology is chosen by an input.
 
-    Takes the model index first, so one Potential can serve both promoters and
-    SMC can move between them within a single run.
+    Takes the model index first, so one Potential serves both promoters and SMC
+    can move between them within a single run.
     """
 
     #: Index value -> promoter. 0 is the monomer, 1 the heterodimer.
@@ -527,12 +532,16 @@ class JointStationaryLogLike(Op):
 # ----------------------------------------------------------------------
 
 class _PromoterModel(ModelBuilder):
-    """Shared plumbing. Subclasses set :attr:`promoter` and :attr:`simulator`.
+    """Shared plumbing for the promoter models.
 
-    Both fitting methods are sampled by ``pm.sample_smc``; they differ only in
-    how a proposal is scored. ``method="exact"`` evaluates the whole
+    Both fitting methods are sampled by ``pm.sample_smc`` and differ only in
+    how a proposal is scored: ``method="exact"`` evaluates the whole
     distribution by finite state projection, ``method="abc"`` simulates counts
     and compares them through the epsilon kernel.
+
+    Attributes:
+        promoter: Key into :data:`PROMOTERS`, set by each subclass.
+        simulator: Forward simulator used under ``method="abc"``.
     """
 
     #: Key into :data:`PROMOTERS`.
@@ -557,7 +566,7 @@ class _PromoterModel(ModelBuilder):
         return dict(DEFAULT_SAMPLER_CONFIG)
 
     def _prepare(self, y):
-        """Flatten the counts and, for ABC only, resolve epsilon against them."""
+        """Flattens counts and, for ABC only, resolves epsilon against them."""
         if y is None:
             raise ValueError("observed counts are required to build the model")
         counts = np.asarray(y, dtype="float64").ravel()
@@ -578,10 +587,18 @@ class _PromoterModel(ModelBuilder):
         return counts, float(epsilon)
 
     def _rate(self, name):
-        """A rate parameter: pinned to a constant, or given its log-normal prior.
+        """Declares a rate as a pinned constant or a log-normal prior.
 
-        A pinned rate is a constant in the graph rather than a zero-variance
-        prior, so it costs the sampler nothing and never appears in the trace.
+        A pinned rate enters the graph as a constant rather than a
+        zero-variance prior, so it costs the sampler nothing and never appears
+        in the trace.
+
+        Args:
+            name: Parameter name, also the key checked for a pinned value.
+            cfg: Model config holding the priors and any ``*_fixed`` entries.
+
+        Returns:
+            A PyMC random variable, or a constant if the rate is pinned.
         """
         cfg = self.model_config
         fixed = cfg.get(f"{name}_fixed")
@@ -591,6 +608,16 @@ class _PromoterModel(ModelBuilder):
                             sigma=cfg[f"{name}_sigma"])
 
     def build_model(self, X=None, y=None, **kwargs):
+        """Builds the PyMC model for one promoter topology.
+
+        Args:
+            X: Unused. Present for the ModelBuilder interface.
+            y: Observed counts, one per cell.
+            **kwargs: Unused.
+
+        Returns:
+            The built ``pm.Model``.
+        """
         counts, epsilon = self._prepare(y)
         cfg = self.model_config
 
@@ -621,12 +648,23 @@ class _PromoterModel(ModelBuilder):
 
     def fit(self, data, sampler_config: dict = None, sample_prior: bool = True,
             **kwargs):
-        """Fit by ABC-SMC.
+        """Fits the model by sequential Monte Carlo.
 
-        ``pm.sample_smc`` on a model whose only observed node is a
-        ``pm.Simulator`` anneals from the prior to the ABC posterior, moving
-        particles with an independent Metropolis kernel. There is no gradient
-        and no likelihood -- each proposal costs one simulated dataset.
+        ``pm.sample_smc`` anneals from the prior to the posterior, moving
+        particles with a gradient-free independent Metropolis kernel. Under
+        ``method="abc"`` the only observed node is a ``pm.Simulator``, so each
+        proposal costs one simulated dataset and the target is the ABC
+        posterior rather than the true one.
+
+        Args:
+            data: Observed counts, one per cell.
+            sampler_config: Overrides for draws and chains. Defaults if None.
+            sample_prior: Whether to draw the prior predictive too. Worth
+              skipping when fitting hundreds of datasets in a sweep.
+            **kwargs: Forwarded to ``pm.sample_smc``.
+
+        Returns:
+            The fitted ``InferenceData``.
         """
         if sampler_config is None:
             sampler_config = self.sampler_config
@@ -659,11 +697,14 @@ class _PromoterModel(ModelBuilder):
         return self.idata
 
     def save(self, fname: str):
-        """Sanitise the DataTree before delegating to ModelBuilder's saver.
+        """Sanitises the trace, then delegates to ModelBuilder's saver.
 
-        NetCDF cannot represent object-dtype arrays, and ModelBuilder.load()
+        NetCDF cannot represent object-dtype arrays, and ``ModelBuilder.load``
         raises KeyError if its metadata attrs are absent, so both are fixed up
-        here first.
+        first.
+
+        Args:
+            fname: Destination ``.nc`` path.
         """
         if getattr(self, "idata", None) is not None:
             attrs = self.idata.attrs
@@ -736,25 +777,18 @@ class JointModel(_PromoterModel):
     1 for the heterodimer, and every proposal is scored under whichever it
     currently selects. The posterior mean of that index is P(heterodimer |
     data), and the posterior odds against the prior odds is the Bayes factor.
-    This is the ABC-SMC model-selection scheme of Toni & Stumpf, and it works
-    here without any trans-dimensional machinery for one specific reason: the
-    two promoters take the *same* five rates, so the parameter space does not
-    change when the index flips and a single set of priors serves both.
+    This is the model-selection scheme of Toni & Stumpf. It needs no
+    trans-dimensional machinery because the two promoters take the same five
+    rates, so the parameter space does not change when the index flips and one
+    set of priors serves both.
 
-    Two things to keep in mind when reading the result.
-
-    The comparison is only as meaningful as its shared footing. Both topologies
-    must see the same data, the same priors and the same scoring method, which
-    is automatic here but would not survive, say, giving one of them a
-    different epsilon.
-
-    And the data may simply not decide. At matched burst frequency and burst
-    size the two put nearly the same law on the counts -- their Fano factors
-    agree to better than 2% everywhere both are reachable (see
-    ``figures/fig_8_fb_sfsp``) -- so a posterior near the prior is the honest
-    answer rather than a failure of the sampler. Check
-    :func:`model_probabilities` against the prior before reading anything into
-    it.
+    Two caveats when reading the result. The comparison is only as meaningful
+    as its shared footing: both topologies must see the same data, priors and
+    scoring method. And the data may simply not decide -- at matched burst
+    frequency and size the two put nearly the same law on the counts, so a
+    posterior near the prior is the honest answer rather than a failed sampler.
+    Check :func:`model_probabilities` against the prior before reading anything
+    into it.
     """
 
     model_type = "JointModel"
@@ -766,6 +800,16 @@ class JointModel(_PromoterModel):
                 "heterodimer_prior": DEFAULT_HETERODIMER_PRIOR}
 
     def build_model(self, X=None, y=None, **kwargs):
+        """Builds the joint model, with the topology as a parameter.
+
+        Args:
+            X: Unused. Present for the ModelBuilder interface.
+            y: Observed counts, one per cell.
+            **kwargs: Unused.
+
+        Returns:
+            The built ``pm.Model``.
+        """
         counts, epsilon = self._prepare(y)
         cfg = self.model_config
 
@@ -802,11 +846,19 @@ class JointModel(_PromoterModel):
 
 
 def model_probabilities(idata, heterodimer_prior=DEFAULT_HETERODIMER_PRIOR):
-    """Posterior topology probabilities and the Bayes factor, from a joint fit.
+    """Reads topology probabilities and the Bayes factor off a joint fit.
 
     The Bayes factor divides out the prior odds, so it measures what the data
     contributed rather than what was assumed. A value near 1 means the counts
     did not separate the two topologies.
+
+    Args:
+        idata: ``InferenceData`` from a :class:`JointModel` fit.
+        heterodimer_prior: Prior probability assigned to the heterodimer.
+
+    Returns:
+        A dict with keys ``monomer``, ``heterodimer`` and
+        ``bayes_factor_het_over_mono``.
     """
     index = np.asarray(idata["posterior"]["model_index"]).ravel()
     p_het = float(index.mean())

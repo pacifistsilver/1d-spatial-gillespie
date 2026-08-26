@@ -1,3 +1,12 @@
+"""Numba-compiled Gillespie simulators for the promoter models.
+
+These generate the synthetic validation data and serve as the independent
+ground truth the analytical results are checked against. Each returns 10
+counts sampled along a single trajectory at t_max/10, ..., t_max, so the
+draws are autocorrelated samples of one cell rather than 10 independent
+cells.
+"""
+
 import numpy as np
 from numba import njit
 
@@ -8,6 +17,20 @@ params, initial_state, stoichiometry = monomer_params
 
 @njit
 def fast_ssa_monomer(alpha_s, beta_s, alpha_n, beta_n, k_y, gamma_y, t_max):
+    """Simulates the monomer promoter, sampling counts along one trajectory.
+
+    Args:
+        alpha_s: SOX2 binding rate.
+        beta_s: SOX2 unbinding rate.
+        alpha_n: NANOG binding rate.
+        beta_n: NANOG unbinding rate.
+        k_y: Transcription rate in the active states.
+        gamma_y: mRNA degradation rate.
+        t_max: Simulation time to stop at.
+
+    Returns:
+        Ten mRNA counts, taken at t_max/10, ..., t_max.
+    """
     state = np.array([1.0, 1.0, 0.0, 0.0, 0.0])
     t = 0.0
     
@@ -72,6 +95,20 @@ def fast_ssa_monomer(alpha_s, beta_s, alpha_n, beta_n, k_y, gamma_y, t_max):
 
 @njit
 def fast_ssa_dimer(alpha_s, beta_s, alpha_n, beta_n, k_y, gamma_y, t_max):
+    """Simulates the heterodimer promoter, sampling along one trajectory.
+
+    Args:
+        alpha_s: SOX2 binding rate.
+        beta_s: SOX2 unbinding rate.
+        alpha_n: NANOG binding rate.
+        beta_n: NANOG unbinding rate.
+        k_y: Transcription rate in the active states.
+        gamma_y: mRNA degradation rate.
+        t_max: Simulation time to stop at.
+
+    Returns:
+        Ten mRNA counts, taken at t_max/10, ..., t_max.
+    """
     # state = [n00, n10, n01, n11, y]
     # Initially 1 free promoter (n00), all others 0.
     state = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
