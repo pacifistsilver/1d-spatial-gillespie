@@ -4,8 +4,6 @@ For each gene the topology is a sampled parameter, so one run returns
 P(heterodimer | counts) and a Bayes factor alongside the rate posteriors. See
 ``stochtf.inference.models.JointModel``.
 
-Two things are handled per gene rather than assumed.
-
 Allele structure. A cell carries two copies and the assay reports them
 separately, so the two are concatenated into 2 x n_cells independent
 realisations of one promoter. Genes with no signal at all on one allele are the

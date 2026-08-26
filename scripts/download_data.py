@@ -1,9 +1,5 @@
 """Download the allele-resolved scRNA-seq counts from GEO.
 
-These two files were previously committed to the repository (~200 MB together),
-which is why the git history had to be rewritten. They are public, so they are
-fetched on demand into data/raw/ instead.
-
 Source: Ochiai et al., GEO accession GSE132589.
 
 Usage

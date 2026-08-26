@@ -1,9 +1,3 @@
-"""Shared figure style and output location.
-
-Every figure script calls :func:`use_paper_style` instead of carrying its own
-copy of the rcParams block, so a change to the paper style is a one-line edit.
-"""
-
 import os
 
 import matplotlib as mpl

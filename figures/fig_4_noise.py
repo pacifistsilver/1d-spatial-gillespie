@@ -1,24 +1,5 @@
 """
-Noise and count distributions for HD vs M, everything from the exact
-stationary solution of the joint (promoter, mRNA) CME.
-
-HD : four-state square 00-10-01-11, independent sites, OR emission,
-     active {10, 01, 11}
-M  : three-state star  S <-> 0 <-> N, exclusive (competitive) binding --
-     SOX2 and NANOG contest the same site and are never co-bound.
-     OR emission, active {S, N}.
-
-Two sweeps are produced from the same machinery:
-  fig_4_noise_alpha : (alpha_s, alpha_n) plane, unbinding rates held fixed
-  fig_4_noise_beta  : (beta_s,  beta_n)  plane, binding rates held fixed
-
-Heatmaps use the stationary FSP of Gupta, Mikelson & Khammash (2017) at
-every grid point (:mod:`stochtf.cme.stationary`).  Escaping mass is
-redirected rather than absorbed or discarded, which keeps the projected
-chain irreducible and hands back a computable bound on the projection
-error -- so at every point the grid is grown until that bound is met,
-instead of a mean + 10 sd rule being trusted to have been wide enough.
-Exact moment equations are solved alongside as an independent check.
+Noise and count distributions for HD vs M, everything from the exact stationary solution of the joint (promoter, mRNA) CME.
 """
 import os
 import numpy as np
@@ -39,7 +20,6 @@ LBL_M = "M"                  # exclusive-binding monomer
 RATE = r"(s$^{-1}$)"
 
 
-# ------------------------------------------------------------- generators
 def excl_Q(a_s, b_s, a_n, b_n):
     """Exclusive binding:  S <-> 0 <-> N,  no co-bound state.
 
@@ -72,7 +52,6 @@ def hd_Q(a_s, b_s, a_n, b_n):
     return Q, np.array([0., 1., 1., 1.])
 
 
-# ------------------------------------------- analytic kinetics, M (exact)
 def excl_kinetics(a_s, b_s, a_n, b_n, ky=KY):
     """(tau_on, tau_off, f, b, CV_on) for the exclusive-binding model.
 
@@ -101,8 +80,6 @@ def excl_kinetics(a_s, b_s, a_n, b_n, ky=KY):
     return tau_on, tau_off, f, ky*tau_on, cv_on
 
 
-# ------------------------------------------------------------------ sFSP
-#: Bound demanded of the convergence factor (3.22) at every grid point.
 TOL = 1e-9
 
 
@@ -149,7 +126,6 @@ def both_models(rates, floor=0):
             max(dh["convergence_factor"], dm["convergence_factor"]))
 
 
-# --------------------------------------------------------------- figure
 def make_figure(build, xvals, yvals, xlab, ylab, xref, yref,
                 fixed_note, dist_pts, dist_title, outname):
     """build(x, y) -> (a_s, b_s, a_n, b_n) defines which plane is swept."""

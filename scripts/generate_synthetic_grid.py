@@ -1,23 +1,4 @@
-"""Simulate heterodimer counts across the binding-rate grid used by fig_5.
-
-``figures/fig_5_distributions`` sweeps the two on-rates over
-``logspace(-2.5, 2.5, 50)`` at fixed off-rates and compares the two promoters'
-*exact* distributions on that grid. This script produces the sampled
-counterpart: a synthetic cell population simulated at every one of those grid
-points, so anything the CME predicts there can be checked against data of the
-size an experiment would actually deliver.
-
-The simulator
--------------
-``stochtf.inference.models.simulate_counts`` is used, which is a Gillespie
-simulation of the promoter jump chain with the mRNA layer integrated out --
-conditional on the promoter path, the stationary count is Poisson with mean
-k_y * integral act(sigma(s)) exp(-gamma s) ds, so the transcription and
-degradation events need not be simulated one by one. Each cell is an
-independent draw from the exact stationary law: there is no burn-in to choose
-and no correlation between cells, which is what the earlier
-``fast_ssa_dimer`` route got wrong (it recorded ten correlated points along a
-single not-yet-stationary trajectory).
+"""Simulate heterodimer counts across the binding-rate grid.
 
 Output
 ------

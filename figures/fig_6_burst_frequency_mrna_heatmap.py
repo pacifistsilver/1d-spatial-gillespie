@@ -1,25 +1,5 @@
 """The burst plane by FSP: mean mRNA over (burst frequency, burst size).
 
-The pair (f, b) is the natural coordinate system of the bursty limit, where
-P(y) -> NB(f/gamma, b/(1+b)) and <y> = b f / gamma.  That identity is only
-asymptotic.  Here the (f, b) plane is swept and, at every point, the *exact*
-stationary distribution is obtained by finite state projection, so <y>, the
-Fano factor and the error in the burst approximation are all measured rather
-than assumed.
-
-Two microscopic conventions map (f, b) back to rates, and they are not
-equivalent.  Since f = k_on and b = k_y/k_off are only two constraints on three
-rates, one rate must be held:
-
-    fixed k_y     k_on = f,  k_off = k_y/b       burst size set by ON duration
-    fixed k_off   k_on = f,  k_y  = b k_off      burst size set by initiation
-
-The top and bottom rows differ only in that choice.  They give different mean
-expression at the same point of the plane -- the initiation-limited promoter
-saturates at <y> = k_y/gamma no matter how large the burst, the
-duration-limited one does not.  Any statement of the form "this gene bursts
-with frequency f and size b" therefore does not pin down its expression.
-
 Outputs: fig10_burst_plane_fsp.svg / .pdf
 """
 import os
@@ -35,9 +15,6 @@ def output_path(name):
     return os.path.join(d, name)
 
 
-# ======================================================================
-# FSP: exact stationary telegraph statistics
-# ======================================================================
 def fsp_stationary(k_on, k_off, k_y, gamma, ymax):
     """Stationary P(y) for the two-state telegraph.
 
@@ -127,9 +104,6 @@ def fsp_moments(k_on, k_off, k_y, gamma=1.0, tol=1e-9, grow=6):
     return m1, m2 - m1 * m1
 
 
-# ======================================================================
-# the sweep
-# ======================================================================
 GAMMA = 1.0                       # time in mRNA lifetimes
 K_Y = 1.0 * GAMMA                # initiation rate, when it is the held rate
 K_OFF = 300.0 * GAMMA             # OFF rate, when it is the held rate
@@ -155,9 +129,6 @@ def sweep(hold):
     return Y, F
 
 
-# two-site OR promoter tracks, for orientation (bug-free closed forms:
-# f = q_s q_n (alpha_s + alpha_n)
-# b = k_y (1 - q_s q_n) / (q_s q_n (alpha_s + alpha_n))
 def or_track(bs, bn, k_y=K_Y, n=400):
     al = np.logspace(-3, 3, n)
     r = (bs / (al + bs)) * (bn / (al + bn))
@@ -165,9 +136,6 @@ def or_track(bs, bn, k_y=K_Y, n=400):
     return f / GAMMA, k_y * (1 - r) / f
 
 
-# ======================================================================
-# figure
-# ======================================================================
 use_paper_style()
 C = PALETTE
 
@@ -186,7 +154,6 @@ ymax_ = max(Yk.max(), Yo.max())
 
 for row, (hold, Y, F, tag) in enumerate(rows):
 
-    # ---- (col 0) mean mRNA -------------------------------------------
     a = ax[row, 0]
     pc = a.pcolormesh(fg, bb, Y.T, norm=LogNorm(ymin, ymax_), cmap="viridis",
                       shading="auto", rasterized=True)
@@ -201,7 +168,6 @@ for row, (hold, Y, F, tag) in enumerate(rows):
         cb.ax.axhline(K_Y / GAMMA, color="#ff7f4d", lw=1.4)
     a.set_title(r"(%s) mean mRNA, %s" % ("ad"[row], tag))
 
-    # ---- (col 1) Fano factor -----------------------------------------
     a = ax[row, 1]
     pc = a.pcolormesh(fg, bb, F.T, norm=LogNorm(1.0, max(Fk.max(), Fo.max())),
                       cmap="magma", shading="auto", rasterized=True)
@@ -211,7 +177,6 @@ for row, (hold, Y, F, tag) in enumerate(rows):
     fig.colorbar(pc, ax=a, label=r"$F=\sigma^2/\langle y\rangle$")
     a.set_title(r"(%s) Fano factor" % "be"[row])
 
-    # ---- (col 2) error in the burst approximation --------------------
     a = ax[row, 2]
     R = Y / BURSTY
     pc = a.pcolormesh(fg, bb, R.T, norm=Normalize(0, 1), cmap="cividis",
@@ -258,7 +223,6 @@ fig.tight_layout()
 fig.savefig(output_path("fig10_burst_plane_fsp.svg"), bbox_inches="tight")
 fig.savefig(output_path("fig10_burst_plane_fsp.pdf"), bbox_inches="tight")
 
-# ---- numbers worth quoting -------------------------------------------
 print("ceiling under fixed k_y:  max <y> = %.4f   (k_y/gamma = %.1f)"
       % (Yk.max(), K_Y / GAMMA))
 print("max <y> under fixed k_off: %.1f" % Yo.max())

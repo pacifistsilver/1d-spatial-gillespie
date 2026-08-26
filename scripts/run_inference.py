@@ -16,14 +16,6 @@ space the counts can identify the topology at all. Values near 1 mean the data
 settle it; values near the prior of 0.5 mean they do not, which is the expected
 outcome wherever the two promoters put nearly the same law on the counts.
 
-The sweep is a fit per grid point, and a fit is not cheap: roughly 17 s at 200
-draws on one chain, so the full 50x50 grid is about twelve hours. ``--stride``
-thins it -- stride 10 gives a 5x5 map in a few minutes, stride 5 a 10x10 in
-under an hour. Thin first, then decide whether the fine grid is worth it.
-
-Rates are inferred in units of the mRNA degradation rate gamma, which stationary
-counts cannot identify separately.
-
 Usage
 -----
     python scripts/run_inference.py --gene esrrb --model heterodimer
